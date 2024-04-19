@@ -1,3 +1,5 @@
+# Jorge_game.py
+
 import pygame
 import numpy as np
 from puck import Puck

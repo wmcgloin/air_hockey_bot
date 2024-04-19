@@ -56,10 +56,15 @@ def update_model(model, target_model, batch, gamma):
 
 def select_action(state, model, epsilon, num_actions):
     if random.random() < epsilon:
-        return random.randint(0, num_actions - 1)
+        # Randomly select an action for each paddle
+        return (random.randint(0, num_actions - 1), random.randint(0, num_actions - 1))
     else:
-        q_values = model.predict(state[np.newaxis])
-        return np.argmax(q_values[0])
+        q_values = model.predict(state[np.newaxis, :])
+        # Assume the model predicts actions for both paddles, split the output
+        action1 = np.argmax(q_values[0][:num_actions//2])
+        action2 = np.argmax(q_values[0][num_actions//2:])
+        return (action1, action2)
+
 
 def update_target_model(main_model, target_model):
     target_model.set_weights(main_model.get_weights())
