@@ -1,4 +1,4 @@
-# utility_jorge.py
+# training_jorge.py
 
 from AI_Jorge import create_model, update_model, ReplayBuffer, update_target_model
 from configuration_Jorge import input_shape, num_actions, buffer_capacity, num_episodes, epsilon_start, epsilon_end, epsilon_decay, batch_size, update_target_model_steps

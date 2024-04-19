@@ -15,4 +15,4 @@ epsilon_decay = 1
 batch_size = 32
 buffer_capacity = 10000
 update_target_model_steps = 100  # How often to update the target model
-patience = 10
+patience = 2
