@@ -31,10 +31,42 @@ class Game:
         self.mode = mode  # Store the game mode
         if self.mode == 'pve':
             self.setup_pve()  # Set up the game for player vs environment mode
+        if self.mode == 'rlve':
+            self.setup_rlve()
     
     def setup_pve(self):
         self.basic_ai_paddle = self.player1_paddle  # Set the AI paddle to player 1 paddle
         self.basic_ai_difficulty = 0.5  # Set the AI difficulty level (0.1 to 1.0)
+
+    def setup_rlve(self):
+        # Set up the game for reinforcement learning vs environment mode
+        self.basic_ai_paddle = self.player1_paddle
+        self.basic_ai_difficulty = 0.5
+        self.rl_ai_paddle = self.player2_paddle
+
+    def update_rlve(self, dt, action = None):
+        # update basic ai
+        if self.basic_ai_paddle:
+            # Simple AI that moves the paddle towards the puck's y position
+            if self.puck.y > self.basic_ai_paddle.y + self.basic_ai_difficulty * 50: # creates slight reaction delay
+                self.basic_ai_paddle.dy = self.basic_ai_paddle.speed
+            elif self.puck.y < self.basic_ai_paddle.y - self.basic_ai_difficulty * 50: # creates slight reaction delay
+                self.basic_ai_paddle.dy = -self.basic_ai_paddle.speed
+            else:
+                self.basic_ai_paddle.dy = 0
+            self.basic_ai_paddle.update_position(dt)
+        # update rl ai
+        if self.rl_ai_paddle:
+            if action is not None:
+                # 0 - no movement, 1 - move up, 2 - move down, 3 - move left, 4 - move right, 5 - move up and right, 6 - move up and left, 7 - move down and left, 8 move down and right
+                # apply action to move the paddle
+                mappings = {0: (0, 0), 1: (0, -1), 2: (0, 1), 3: (-1, 0), 4: (1, 0), 5: (1, -1), 6: (-1, -1), 7: (-1, 1), 8: (1, 1)}
+                dx, dy = mappings.get(action) # get the dx and dy from the action mappings
+                self.rl_ai_paddle.dx = self.rl_ai_paddle.speed * dx
+                self.rl_ai_paddle.dy = self.rl_ai_paddle.speed * dy
+                self.rl_ai_paddle.update_position(dt)
+            else:
+                pass
 
     def update_pve(self, dt):
         if self.basic_ai_paddle:
@@ -53,7 +85,7 @@ class Game:
             return False
         return True
 
-    def update(self, dt):
+    def update(self, dt, action = None):
         if self.mode == 'pvp':
             # Update game state each frame, handling player input and moving game objects
             keys = pygame.key.get_pressed()  # Get current key states within the frame
@@ -66,7 +98,7 @@ class Game:
             # Update positions based on current speeds and delta time
             self.player1_paddle.update_position(dt)
             self.player2_paddle.update_position(dt)
-        else:
+        elif self.mode == 'pve':
             # update basic ai
             self.update_pve(dt)
 
@@ -75,12 +107,18 @@ class Game:
             self.player2_paddle.dx = self.player2_paddle.speed * (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT])
             self.player2_paddle.dy = self.player2_paddle.speed * (keys[pygame.K_DOWN] - keys[pygame.K_UP])
             self.player2_paddle.update_position(dt)
+        else:
+            self.update_rlve(dt, action)
 
         current_time = time.time()  # Get the current time
         self.puck.move(dt)
         self.puck.check_timeout(current_time)  # Check for timeout
         self.check_goal()  # Check if a goal has been scored
         self.check_collisions()  # Check for collisions between the puck and paddles
+
+    def get_state(self):
+        # Return the current game state as an image
+        pass
 
     def draw_game_over(self):
         # Render game over screen with winner information and instructions
