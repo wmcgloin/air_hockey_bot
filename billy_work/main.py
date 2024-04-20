@@ -2,7 +2,7 @@
 import pygame
 import sys
 import argparse
-from game import Game
+from game import AirHockeyGame
 import time
 
 def main(mode = 'pvp'):
@@ -11,16 +11,14 @@ def main(mode = 'pvp'):
     screen = pygame.display.set_mode(size)  # Create a display window
     pygame.display.set_caption('Air Hockey')  # Set the title of the window
 
-    game = Game(screen, mode)  # Initialize the game object with the screen
+    game = AirHockeyGame(screen, mode)  # Initialize the game object with the screen
 
-    last_time = time.time()  # Record the initial time for frame rate management
+    clock = pygame.time.Clock()  # Initialize clock object for frame rate control    
 
     running = True  # Main game loop condition
 
     while running:
-        current_time = time.time()  # Get current time
-        dt = current_time - last_time  # Calculate the time delta between frames
-        last_time = current_time  # Update last_time to the current time
+        dt = clock.tick(60) / 1000.0  # Set the desired frame rate to 30 FPS and calculate delta time
 
         # Event handling loop
         for event in pygame.event.get():
@@ -29,7 +27,7 @@ def main(mode = 'pvp'):
             elif event.type == pygame.KEYDOWN:
                 if game.game_over:  # Check if the game is over
                     if event.key == pygame.K_r:  # Check if 'R' is pressed
-                        game = Game(screen, mode)  # Reinitialize the game to restart
+                        game = AirHockeyGame(screen, mode)  # Reinitialize the game to restart
                     elif event.key == pygame.K_ESCAPE:  # Check if 'Escape' is pressed
                         running = False  # End the game loop
 

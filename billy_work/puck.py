@@ -27,8 +27,8 @@ class Puck:
         self.last_hit_time = time.time()  # Reset the hit timer upon launching
 
     def check_timeout(self, current_time):
-        # Check if the puck has not been hit for 10 seconds
-        if self.last_hit_time and (current_time - self.last_hit_time > 6):
+        # Check if the puck has not been hit for 5 seconds
+        if self.last_hit_time and (current_time - self.last_hit_time > 5):
             self.reset()  # Reset the puck if 10 seconds have passed without contact
 
     def launch_puck(self):
@@ -42,13 +42,13 @@ class Puck:
         # Update the position of the puck based on its velocity and time elapsed
         self.x += self.dx * dt
         self.y += self.dy * dt
-        friction = 0.999999  # Apply a slight friction to slow the puck over time
+        friction = 0.9999  # Apply a slight friction to slow the puck over time
         self.dx *= friction
         self.dy *= friction
 
         # Enforce a maximum speed to prevent the puck from moving too fast
         speed = math.sqrt(self.dx**2 + self.dy**2)
-        max_speed = 600  # Define the maximum allowable speed
+        max_speed = 650  # Define the maximum allowable speed
         if speed > max_speed:
             scale = max_speed / speed
             self.dx *= scale
