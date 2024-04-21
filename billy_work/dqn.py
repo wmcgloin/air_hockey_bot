@@ -163,6 +163,28 @@ def optimize_model():
     loss.backward()
     optimizer.step()
 
+def save_checkpoint(epoch, filename="checkpoint.pth"):
+    torch.save({
+        'epoch': epoch,
+        'model_state_dict': policy_net.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'loss': loss,
+    }, filename)
+
+plt.ion()
+fig, ax = plt.subplots()
+episode_rewards = []
+
+def plot_rewards():
+    ax.clear()
+    ax.plot(episode_rewards)
+    ax.set_title('Episode vs Rewards')
+    ax.set_xlabel('Episode')
+    ax.set_ylabel('Cumulative Reward')
+    plt.draw()
+    plt.pause(0.001)
+
+
 # Set up plotting
 plt.ion()  # Interactive mode on
 fig, ax = plt.subplots()
@@ -179,34 +201,42 @@ def plot_rewards():
 
 # Training loop
 steps_done = 0
-for i_episode in range(NUM_EPISODES):
-    env.reset()
-    state = env.get_state()
-    state = torch.from_numpy(state).unsqueeze(0).unsqueeze(0).float().to(device)  # Ensure state is correctly shaped
-    total_reward = 0
+def train(num_episodes=NUM_EPISODES):
+    for i_episode in range(num_episodes):
+        env.reset()
+        state = env.get_state()
+        state = torch.from_numpy(state).unsqueeze(0).unsqueeze(0).float().to(device)
+        total_reward = 0
 
-    for t in count():
-        action = select_action(state, steps_done)
-        next_state, reward, done, truncated, info = env.step(action.item())
-        reward = torch.tensor([reward], device=device)
-        
-        if not done:
-            next_state = torch.from_numpy(next_state).unsqueeze(0).unsqueeze(0).float().to(device)  # Same reshaping for next_state
-        else:
-            next_state = None
+        for t in count():
+            action = select_action(state, i_episode)
+            next_state, reward, done, truncated, info = env.step(action.item())
+            reward = torch.tensor([reward], device=device)
+            total_reward += reward.item()
 
-        memory.push(state, action, next_state, reward)
-        state = next_state if next_state is not None else state  # Ensure continuity in states
+            if not done:
+                next_state = torch.from_numpy(next_state).unsqueeze(0).unsqueeze(0).float().to(device)
+            else:
+                next_state = None
 
-        optimize_model()
-        if done:
-            episode_rewards.append(total_reward)
-            plot_rewards()
-            break
+            memory.push(state, action, next_state, reward)
+            state = next_state if next_state is not None else state
 
-    if i_episode % TARGET_UPDATE == 0:
-        target_net.load_state_dict(policy_net.state_dict())
+            optimize_model()
+            if done:
+                episode_rewards.append(total_reward)
+                plot_rewards()
+                break
 
-print('Complete')
-plt.ioff()  # Turn off interactive mode
-plt.show()  # Display results
+        if i_episode % TARGET_UPDATE == 0:
+            target_net.load_state_dict(policy_net.state_dict())
+
+        if i_episode % 10 == 0:
+            save_checkpoint(i_episode, f"checkpoint_{i_episode}.pth")
+    # Save the final model
+    torch.save(policy_net.state_dict(), "final_model.pth")
+    print("Training complete and model saved.")
+
+train()
+plt.ioff()
+plt.show()
