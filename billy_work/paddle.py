@@ -29,7 +29,7 @@ class Paddle:
 
         if padded_left_boundary <= new_x <= padded_right_boundary:
             self.x = new_x
-        if self.radius + 10 <= new_y <= self.screen_height - self.radius - 10:  # Add 10 pixels of padding at top and bottom
+        if self.radius + 15 <= new_y <= self.screen_height - self.radius - 15:  # Add 10 pixels of padding at top and bottom
             self.y = new_y
 
     #     # Optionally, you can uncomment the following lines to apply a drag effect that slows the paddle over time

@@ -3,9 +3,10 @@ import pygame
 from puck import Puck
 from paddle import Paddle
 import time
+import numpy as np
 
-class Game:
-    def __init__(self, screen, mode):
+class AirHockeyGame:
+    def __init__(self, screen, mode = 'rlve'):
         # Initialize game settings
         self.screen = screen  # Reference to the display window
         self.screen_width, self.screen_height = screen.get_size()  # Get the dimensions of the screen
@@ -33,7 +34,18 @@ class Game:
             self.setup_pve()  # Set up the game for player vs environment mode
         if self.mode == 'rlve':
             self.setup_rlve()
-    
+
+    def reset(self):
+        # Reset the game state
+        self.game_over = False
+        self.winner = None
+        self.player1_score = 0
+        self.player2_score = 0
+        self.puck.reset()
+        self.player1_paddle.x, self.player1_paddle.y = 200, 200
+        self.player2_paddle.x, self.player2_paddle.y = 600, 200
+        return self.get_state()
+
     def setup_pve(self):
         self.basic_ai_paddle = self.player1_paddle  # Set the AI paddle to player 1 paddle
         self.basic_ai_difficulty = 0.5  # Set the AI difficulty level (0.1 to 1.0)
@@ -43,6 +55,17 @@ class Game:
         self.basic_ai_paddle = self.player1_paddle
         self.basic_ai_difficulty = 0.5
         self.rl_ai_paddle = self.player2_paddle
+
+    def update_pve(self, dt):
+        if self.basic_ai_paddle:
+            # Simple AI that moves the paddle towards the puck's y position
+            if self.puck.y > self.basic_ai_paddle.y + self.basic_ai_difficulty * 50: # creates slight reaction delay
+                self.basic_ai_paddle.dy = self.basic_ai_paddle.speed
+            elif self.puck.y < self.basic_ai_paddle.y - self.basic_ai_difficulty * 50: # creates slight reaction delay
+                self.basic_ai_paddle.dy = -self.basic_ai_paddle.speed
+            else:
+                self.basic_ai_paddle.dy = 0
+            self.basic_ai_paddle.update_position(dt)
 
     def update_rlve(self, dt, action = None):
         # update basic ai
@@ -68,17 +91,6 @@ class Game:
             else:
                 pass
 
-    def update_pve(self, dt):
-        if self.basic_ai_paddle:
-            # Simple AI that moves the paddle towards the puck's y position
-            if self.puck.y > self.basic_ai_paddle.y + self.basic_ai_difficulty * 50: # creates slight reaction delay
-                self.basic_ai_paddle.dy = self.basic_ai_paddle.speed
-            elif self.puck.y < self.basic_ai_paddle.y - self.basic_ai_difficulty * 50: # creates slight reaction delay
-                self.basic_ai_paddle.dy = -self.basic_ai_paddle.speed
-            else:
-                self.basic_ai_paddle.dy = 0
-            self.basic_ai_paddle.update_position(dt)
-
     def handle_event(self, event):
         # Handle events, currently only checks for window quit
         if event.type == pygame.QUIT:
@@ -86,6 +98,7 @@ class Game:
         return True
 
     def update(self, dt, action = None):
+        reward = 0  # Initialize reward for this update
         if self.mode == 'pvp':
             # Update game state each frame, handling player input and moving game objects
             keys = pygame.key.get_pressed()  # Get current key states within the frame
@@ -109,16 +122,50 @@ class Game:
             self.player2_paddle.update_position(dt)
         else:
             self.update_rlve(dt, action)
+            # Reward calculation
+            reward += self.calculate_rewards()  # Add the calculated rewards to the total reward for this update
+            return reward, self.game_over, {}
 
         current_time = time.time()  # Get the current time
         self.puck.move(dt)
         self.puck.check_timeout(current_time)  # Check for timeout
         self.check_goal()  # Check if a goal has been scored
         self.check_collisions()  # Check for collisions between the puck and paddles
+    
+    def calculate_rewards(self):
+        reward = 0  # Initialize reward
+        # goals
+        if self.left_goal.collidepoint(self.puck.x, self.puck.y): # player 2 (RL) scores
+            reward += 10 # Reward for scoring a goal 
+        if self.right_goal.collidepoint(self.puck.x, self.puck.y): # player 1 scores
+            reward -= 10 # Penalty for letting the puck into the goal
+        # winning/losing
+        if self.game_over:
+            if self.winner == "Player 1":
+                reward -= 100  # penalty for losing
+            elif self.winner == "Player 2":
+                reward += 100  # reward for winning
+        # puck collision with paddles
+        if self.rl_ai_paddle and self.check_paddle_collision(self.rl_ai_paddle):
+            reward += 0.5  # Reward for paddle2 (rl_ai_paddle) coming into contact with the puck
+        # time penalty
+        reward -= 0.16 / 60  # 60 fps
+        return reward
+
+    def check_paddle_collision(self, paddle):
+        # Calculate collision dynamics between the puck and a paddle
+        dx = self.puck.x - paddle.x  # Calculate the difference in x-coordinates between the puck and the paddle
+        dy = self.puck.y - paddle.y  # Calculate the difference in y-coordinates between the puck and the paddle
+        distance = (dx**2 + dy**2)**0.5  # Calculate the distance between the puck and the paddle
+        if distance < self.puck.radius + paddle.radius:  # Check if the distance is less than the sum of the puck and paddle radii
+            self.puck.last_hit_time = time.time()  # Update the last hit time on collision
+            return True  # Return True if a collision occurred
+        return False  # Return False if no collision occurred
 
     def get_state(self):
         # Return the current game state as an image
-        pass
+        state = pygame.surfarray.array3d(self.screen)
+        return state
 
     def draw_game_over(self):
         # Render game over screen with winner information and instructions
@@ -135,8 +182,8 @@ class Game:
         quit_rect = quit_text.get_rect(center=(self.screen_width / 2, self.screen_height / 2 + 70))
         self.screen.blit(quit_text, quit_rect)
 
-    def check_goal(self):
-        # Check if the puck has entered either goal and update scores or declare a winner
+    def check_goal(self): # Check if the puck has entered either goal and update scores or declare a winner
+        # left goal (player 2 scores)
         if self.left_goal.collidepoint(self.puck.x, self.puck.y):
             self.player2_score += 1
             if self.player2_score >= 7:
@@ -144,6 +191,7 @@ class Game:
                 self.winner = "Player 2"
             self.reset_puck()
 
+        # right goal (player 1 scores)
         elif self.right_goal.collidepoint(self.puck.x, self.puck.y):
             self.player1_score += 1
             if self.player1_score >= 7:
