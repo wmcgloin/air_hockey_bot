@@ -171,6 +171,36 @@ def plot_rewards():
     plt.draw()  # Redraw the current figure.
     plt.pause(0.001)  # Briefly pause to update the figure with the new plot.
 
+# # Warm-up period to populate replay memory before training begins
+# warm_up = BATCH_SIZE  # Set the warm-up period to at least one batch size
+# for _ in range(warm_up):
+#     # Reset environment and get initial state
+#     env.reset()
+#     state = env.get_state()
+#     state = torch.from_numpy(state).permute(2, 0, 1).unsqueeze(0).float().to(device)
+    
+#     # Perform random actions and store transitions in replay memory
+#     while True:
+#         action = torch.tensor([[random.randrange(env.action_space.n)]], device=device, dtype=torch.long)
+#         next_state, reward, done, truncated, info = env.step(action.item())
+#         reward = torch.tensor([reward], device=device)
+
+#         # Process next_state similar to the state
+#         if not done:
+#             next_state = torch.from_numpy(next_state).permute(2, 0, 1).unsqueeze(0).float().to(device)
+#         else:
+#             next_state = None
+        
+#         # Store the transition in replay memory
+#         memory.push(state, action, next_state, reward)
+
+#         # Move to the next state
+#         state = next_state
+
+#         # Exit the loop if the episode is finished
+#         if done:
+#             break
+
 # Start of the training loop.
 steps_done = 0  # Initialize the step counter.
 for i_episode in range(NUM_EPISODES):  # Loop over each episode.

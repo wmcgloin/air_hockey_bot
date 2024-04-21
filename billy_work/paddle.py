@@ -7,7 +7,7 @@ class Paddle:
         self.x = x  # X-coordinate of the paddle's center
         self.y = y  # Y-coordinate of the paddle's center
         self.radius = radius  # Radius of the paddle
-        self.speed = 300  # Speed of the paddle in pixels per second
+        self.speed = 6  # Speed of the paddle in pixels per second
         self.dx = 0  # Initial horizontal velocity
         self.dy = 0  # Initial vertical velocity
         self.screen_width = screen_width  # Total width of the game screen
@@ -19,9 +19,9 @@ class Paddle:
         # Draw the paddle on the screen as a blue circle
         pygame.draw.circle(screen, (0, 0, 255), (self.x, self.y), self.radius)
 
-    def update_position(self, dt):
-        new_x = self.x + self.dx * dt
-        new_y = self.y + self.dy * dt
+    def update_position(self):
+        new_x = self.x + self.dx 
+        new_y = self.y + self.dy
 
         # Apply additional padding to paddle boundaries
         padded_left_boundary = self.left_boundary + self.radius + 10  # Add 10 pixels of padding
@@ -31,8 +31,3 @@ class Paddle:
             self.x = new_x
         if self.radius + 15 <= new_y <= self.screen_height - self.radius - 15:  # Add 10 pixels of padding at top and bottom
             self.y = new_y
-
-    #     # Optionally, you can uncomment the following lines to apply a drag effect that slows the paddle over time
-    #     # drag = 0.98  # Drag coefficient that slightly reduces velocity each frame to simulate resistance
-    #     # self.dx *= drag  # Apply drag to horizontal velocity
-    #     # self.dy *= drag  # Apply drag to vertical velocity

@@ -1,5 +1,3 @@
-import sys
-import os
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
@@ -36,8 +34,9 @@ class AirHockeyEnv(gym.Env):
             self.frame_buffer.append(new_frame)
         
         # Now we concatenate along the channel dimension to form the observation
-        # print([frame.shape for frame in self.frame_buffer])
         obs = np.concatenate(list(self.frame_buffer), axis=2)
+        assert(obs.shape == self.observation_space.shape), str(obs.shape)
+        self.render()
         return obs, reward, done, truncated, info
         
     def reset(self, seed=None, options=None):
@@ -51,10 +50,14 @@ class AirHockeyEnv(gym.Env):
             print(observation)
             print(self.observation_space)
         info = {}  # Optionally, you can include additional reset information here
+        assert(observation.shape == self.observation_space.shape), str(observation.shape)
         return observation, info  # Return a tuple of observation and info
 
     def render(self, mode='human'):
         return self.game.draw()
+    # imageio saves as gif
+    # fix render function
+    # fix shapes
     
     def close(self): # Clean up resources
         self.game.quit()

@@ -2,7 +2,6 @@
 import pygame
 from puck import Puck
 from paddle import Paddle
-import time
 import numpy as np
 
 class AirHockeyGame:
@@ -28,6 +27,9 @@ class AirHockeyGame:
         # Initialize scores
         self.player1_score = 0
         self.player2_score = 0
+
+        # Initialize tick count
+        self.tick_count = 0 # replace time with tick_count
 
         self.mode = mode  # Store the game mode
         if self.mode == 'pve':
@@ -64,7 +66,7 @@ class AirHockeyGame:
         self.basic_ai_difficulty = 0.5
         self.random_paddle = self.player2_paddle
 
-    def update_pve(self, dt):
+    def update_pve(self):
         if self.basic_ai_paddle:
             # Simple AI that moves the paddle towards the puck's y position
             if self.puck.y > self.basic_ai_paddle.y + self.basic_ai_difficulty * 50: # creates slight reaction delay
@@ -73,9 +75,9 @@ class AirHockeyGame:
                 self.basic_ai_paddle.dy = -self.basic_ai_paddle.speed
             else:
                 self.basic_ai_paddle.dy = 0
-            self.basic_ai_paddle.update_position(dt)
+            self.basic_ai_paddle.update_position()
 
-    def update_rlve(self, dt, action = None):
+    def update_rlve(self, action = None):
         # update basic ai
         if self.basic_ai_paddle:
             # Simple AI that moves the paddle towards the puck's y position
@@ -85,7 +87,7 @@ class AirHockeyGame:
                 self.basic_ai_paddle.dy = -self.basic_ai_paddle.speed
             else:
                 self.basic_ai_paddle.dy = 0
-            self.basic_ai_paddle.update_position(dt)
+            self.basic_ai_paddle.update_position()
         # update rl ai
         if self.rl_ai_paddle:
             if action is not None:
@@ -95,11 +97,11 @@ class AirHockeyGame:
                 dx, dy = mappings.get(action) # get the dx and dy from the action mappings
                 self.rl_ai_paddle.dx = self.rl_ai_paddle.speed * dx
                 self.rl_ai_paddle.dy = self.rl_ai_paddle.speed * dy
-                self.rl_ai_paddle.update_position(dt)
+                self.rl_ai_paddle.update_position()
             else:
                 pass
 
-    def update_random(self, dt):
+    def update_random(self):
         # update basic ai
         if self.basic_ai_paddle:
             # Simple AI that moves the paddle towards the puck's y position
@@ -109,7 +111,7 @@ class AirHockeyGame:
                 self.basic_ai_paddle.dy = -self.basic_ai_paddle.speed
             else:
                 self.basic_ai_paddle.dy = 0
-            self.basic_ai_paddle.update_position(dt)
+            self.basic_ai_paddle.update_position()
         if self.random_paddle:
             # choose a random integer from 0-8
             action = np.random.randint(0, 9)
@@ -117,7 +119,7 @@ class AirHockeyGame:
             dx, dy = mappings.get(action) # get the dx and dy from the action mappings
             self.random_paddle.dx = self.random_paddle.speed * dx
             self.random_paddle.dy = self.random_paddle.speed * dy
-            self.random_paddle.update_position(dt)
+            self.random_paddle.update_position()
 
     def handle_event(self, event):
         # Handle events, currently only checks for window quit
@@ -125,7 +127,13 @@ class AirHockeyGame:
             return False
         return True
 
-    def update(self, dt, action = None):
+    def check_for_reset(self, max_ticks = 300):
+        if self.tick_count >= max_ticks:
+            # Timeout action
+            self.puck.reset()  # Reset the puck
+            self.tick_count = 0
+
+    def update(self, action = None):
         reward = 0  # Initialize reward for this update
         if self.mode == 'pvp':
             # Update game state each frame, handling player input and moving game objects
@@ -136,30 +144,65 @@ class AirHockeyGame:
             self.player2_paddle.dx = self.player2_paddle.speed * (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT])
             self.player2_paddle.dy = self.player2_paddle.speed * (keys[pygame.K_DOWN] - keys[pygame.K_UP])
 
-            # Update positions based on current speeds and delta time
-            self.player1_paddle.update_position(dt)
-            self.player2_paddle.update_position(dt)
+            # Update positions based on current speeds
+            self.player1_paddle.update_position()
+            self.player2_paddle.update_position()
         elif self.mode == 'pve':
             # update basic ai
-            self.update_pve(dt)
+            self.update_pve()
 
             # human input
             keys = pygame.key.get_pressed()
             self.player2_paddle.dx = self.player2_paddle.speed * (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT])
             self.player2_paddle.dy = self.player2_paddle.speed * (keys[pygame.K_DOWN] - keys[pygame.K_UP])
-            self.player2_paddle.update_position(dt)
+            self.player2_paddle.update_position()
         elif self.mode == 'rlve':
-            self.update_rlve(dt, action)
+            self.update_rlve(action)
             # Reward calculation
             reward += self.calculate_rewards()  # Add the calculated rewards to the total reward for this update
             return reward, self.game_over, {}
         else:
             # update random ai
-            self.update_random(dt)
+            self.update_random()
 
-        current_time = time.time()  # Get the current time
-        self.puck.move(dt)
-        self.puck.check_timeout(current_time)  # Check for timeout
+        self.puck.move()
+        # check for collisions to reset tick count
+        if self.mode == 'pvp':
+            if self.check_paddle_collision(self.player1_paddle):
+                self.tick_count = 0
+            elif self.check_paddle_collision(self.player2_paddle):
+                self.tick_count = 0
+            else:
+                self.tick_count += 1
+        elif self.mode == 'pve':
+            if self.check_paddle_collision(self.basic_ai_paddle):
+                self.tick_count = 0
+            elif self.check_paddle_collision(self.player2_paddle):
+                self.tick_count = 0
+            else:
+                self.tick_count += 1
+        elif self.mode == 'rlve':
+            if self.check_paddle_collision(self.basic_ai_paddle):
+                self.tick_count = 0
+            elif self.check_paddle_collision(self.rl_ai_paddle):
+                self.tick_count = 0
+            else:
+                self.tick_count += 1
+        else:
+            if self.check_paddle_collision(self.basic_ai_paddle):
+                self.tick_count = 0
+            elif self.check_paddle_collision(self.random_paddle):
+                self.tick_count = 0
+            else:
+                self.tick_count += 1
+        # check for goals to reset tick count
+        if self.left_goal.collidepoint(self.puck.x, self.puck.y):
+            self.tick_count = 0
+        elif self.right_goal.collidepoint(self.puck.x, self.puck.y):
+            self.tick_count = 0
+        else:
+            pass
+        self.check_for_reset()  # Check for reset puck
         self.check_goal()  # Check if a goal has been scored
         self.check_collisions()  # Check for collisions between the puck and paddles
     
@@ -179,9 +222,7 @@ class AirHockeyGame:
         # puck collision with paddles
         if self.rl_ai_paddle and self.check_paddle_collision(self.rl_ai_paddle):
             reward += 0.5  # Reward for paddle2 (rl_ai_paddle) coming into contact with the puck
-        # time penalty
-        reward -= 0.16 / 60  # 60 fps
-        return reward
+        return reward  
 
     def check_paddle_collision(self, paddle):
         # Calculate collision dynamics between the puck and a paddle
@@ -189,7 +230,6 @@ class AirHockeyGame:
         dy = self.puck.y - paddle.y  # Calculate the difference in y-coordinates between the puck and the paddle
         distance = (dx**2 + dy**2)**0.5  # Calculate the distance between the puck and the paddle
         if distance < self.puck.radius + paddle.radius:  # Check if the distance is less than the sum of the puck and paddle radii
-            self.puck.last_hit_time = time.time()  # Update the last hit time on collision
             return True  # Return True if a collision occurred
         return False  # Return False if no collision occurred
 
@@ -269,7 +309,6 @@ class AirHockeyGame:
         dy = self.puck.y - paddle.y
         distance = (dx**2 + dy**2)**0.5
         if distance < self.puck.radius + paddle.radius:
-            self.puck.last_hit_time = time.time()  # Update the last hit time on collision
             overlap = self.puck.radius + paddle.radius - distance
             dx /= distance
             dy /= distance
@@ -278,6 +317,6 @@ class AirHockeyGame:
             relative_velocity_x = self.puck.dx - paddle.dx
             relative_velocity_y = self.puck.dy - paddle.dy
             velocity_component = (relative_velocity_x * dx + relative_velocity_y * dy)
-            self.puck.dx -= 1.8 * velocity_component * dx
-            self.puck.dy -= 1.8 * velocity_component * dy
+            self.puck.dx -= 1.5 * velocity_component * dx
+            self.puck.dy -= 1.5 * velocity_component * dy
 
