@@ -166,6 +166,8 @@ class AirHockeyGame:
         # Return the current game state as an image
         state = pygame.surfarray.array3d(self.screen)
         grayscale_state = 0.299*state[:,:,0] + 0.587*state[:,:,1] + 0.114*state[:,:,2] # convert to grayscale
+        # conver to uint8
+        grayscale_state = grayscale_state.astype(np.uint8)
         # Add a channel dimension
         grayscale_state = np.expand_dims(grayscale_state, axis=-1)
         return grayscale_state

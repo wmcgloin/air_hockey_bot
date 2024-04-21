@@ -38,7 +38,7 @@ class AirHockeyEnv(gym.Env):
         # Now we concatenate along the channel dimension to form the observation
         # print([frame.shape for frame in self.frame_buffer])
         obs = np.concatenate(list(self.frame_buffer), axis=2)
-        return obs, reward, done, truncated#, info
+        return obs, reward, done, truncated, info
         
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
