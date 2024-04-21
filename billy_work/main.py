@@ -46,7 +46,7 @@ def main(mode = 'pvp'):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Play Air Hockey')
     parser.add_argument('--mode', type=str, default='pvp',
-                        choices=['pvp', 'pve', 'rlve'], # currently we have two game modes: pvp and pve
-                        help='Choose the game mode: pvp, pve, rlve')
+                        choices=['pvp', 'pve', 'rlve', 'random'], # currently we have two game modes: pvp and pve
+                        help='Choose the game mode: pvp, pve, rlve, random')
     args = parser.parse_args()
     main(args.mode)

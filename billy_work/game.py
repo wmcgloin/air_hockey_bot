@@ -34,6 +34,8 @@ class AirHockeyGame:
             self.setup_pve()  # Set up the game for player vs environment mode
         if self.mode == 'rlve':
             self.setup_rlve()
+        if self.mode == 'random':
+            self.setup_random()
 
     def reset(self):
         # Reset the game state
@@ -55,6 +57,12 @@ class AirHockeyGame:
         self.basic_ai_paddle = self.player1_paddle
         self.basic_ai_difficulty = 0.5
         self.rl_ai_paddle = self.player2_paddle
+
+    def setup_random(self):
+        # Set up the game for random movement vs environment mode
+        self.basic_ai_paddle = self.player1_paddle
+        self.basic_ai_difficulty = 0.5
+        self.random_paddle = self.player2_paddle
 
     def update_pve(self, dt):
         if self.basic_ai_paddle:
@@ -91,6 +99,26 @@ class AirHockeyGame:
             else:
                 pass
 
+    def update_random(self, dt):
+        # update basic ai
+        if self.basic_ai_paddle:
+            # Simple AI that moves the paddle towards the puck's y position
+            if self.puck.y > self.basic_ai_paddle.y + self.basic_ai_difficulty * 50: # creates slight reaction delay
+                self.basic_ai_paddle.dy = self.basic_ai_paddle.speed
+            elif self.puck.y < self.basic_ai_paddle.y - self.basic_ai_difficulty * 50: # creates slight reaction delay
+                self.basic_ai_paddle.dy = -self.basic_ai_paddle.speed
+            else:
+                self.basic_ai_paddle.dy = 0
+            self.basic_ai_paddle.update_position(dt)
+        if self.random_paddle:
+            # choose a random integer from 0-8
+            action = np.random.randint(0, 9)
+            mappings = {0: (0, 0), 1: (0, -1), 2: (0, 1), 3: (-1, 0), 4: (1, 0), 5: (1, -1), 6: (-1, -1), 7: (-1, 1), 8: (1, 1)}
+            dx, dy = mappings.get(action) # get the dx and dy from the action mappings
+            self.random_paddle.dx = self.random_paddle.speed * dx
+            self.random_paddle.dy = self.random_paddle.speed * dy
+            self.random_paddle.update_position(dt)
+
     def handle_event(self, event):
         # Handle events, currently only checks for window quit
         if event.type == pygame.QUIT:
@@ -120,11 +148,14 @@ class AirHockeyGame:
             self.player2_paddle.dx = self.player2_paddle.speed * (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT])
             self.player2_paddle.dy = self.player2_paddle.speed * (keys[pygame.K_DOWN] - keys[pygame.K_UP])
             self.player2_paddle.update_position(dt)
-        else:
+        elif self.mode == 'rlve':
             self.update_rlve(dt, action)
             # Reward calculation
             reward += self.calculate_rewards()  # Add the calculated rewards to the total reward for this update
             return reward, self.game_over, {}
+        else:
+            # update random ai
+            self.update_random(dt)
 
         current_time = time.time()  # Get the current time
         self.puck.move(dt)

@@ -156,51 +156,57 @@ def optimize_model():
     optimizer.step()  # Apply the gradients to update the weights
 
 
-# Set up plotting
-plt.ion()  # Interactive mode on
-fig, ax = plt.subplots()
-episode_rewards = []
+# Set up for live updating of a plot during the training process.
+plt.ion()  # Enable interactive mode, which allows dynamic updates to the plot.
+fig, ax = plt.subplots()  # Create a new figure and axes for plotting.
+episode_rewards = []  # Initialize a list to store the cumulative rewards of each episode.
 
+# Function definition to plot the rewards after each episode.
 def plot_rewards():
-    ax.clear()
-    ax.plot(episode_rewards)
-    ax.set_title('Episode vs Rewards')
-    ax.set_xlabel('Episode')
-    ax.set_ylabel('Cumulative Reward')
-    plt.draw()
-    plt.pause(0.001)  # pause to update plots
+    ax.clear()  # Clear the current axes.
+    ax.plot(episode_rewards)  # Plot the cumulative rewards per episode.
+    ax.set_title('Episode vs Rewards')  # Set the title of the plot.
+    ax.set_xlabel('Episode')  # Label the x-axis as 'Episode'.
+    ax.set_ylabel('Cumulative Reward')  # Label the y-axis as 'Cumulative Reward'.
+    plt.draw()  # Redraw the current figure.
+    plt.pause(0.001)  # Briefly pause to update the figure with the new plot.
 
-# Training loop
-steps_done = 0
-for i_episode in range(NUM_EPISODES):
-    env.reset()
-    state = env.get_state()
+# Start of the training loop.
+steps_done = 0  # Initialize the step counter.
+for i_episode in range(NUM_EPISODES):  # Loop over each episode.
+    env.reset()  # Reset the environment at the start of each episode.
+    state = env.get_state()  # Get the initial state from the environment.
+    # Process the state to match the expected input format of the neural network and send to the computing device.
     state = torch.from_numpy(state).permute(2, 0, 1).unsqueeze(0).float().to(device)
-    total_reward = 0
+    total_reward = 0  # Initialize the total reward for the episode.
 
-    for t in count():
-        action = select_action(state, steps_done)
+    for t in count():  # Infinite loop for each time step in the episode.
+        action = select_action(state, steps_done)  # Select an action using the defined policy.
+        # Take the selected action and observe the next state and reward, along with done flag (episode end).
         next_state, reward, done, truncated, info = env.step(action.item())
-        reward = torch.tensor([reward], device=device)
-        total_reward += reward.item()
+        reward = torch.tensor([reward], device=device)  # Convert the reward to a tensor.
+        total_reward += reward.item()  # Accumulate the total reward.
 
+        # Prepare the next_state for the network or set it to None if the episode is done.
         if not done:
             next_state = torch.from_numpy(next_state).permute(2, 0, 1).unsqueeze(0).float().to(device)
         else:
             next_state = None
 
-        memory.push(state, action, next_state, reward)
-        state = next_state
+        memory.push(state, action, next_state, reward)  # Save the experience in the replay memory.
+        state = next_state  # Update the state for the next iteration.
 
-        optimize_model()
-        if done:
-            episode_rewards.append(total_reward)
-            plot_rewards()
-            break
+        optimize_model()  # Optimize the model using the collected experience.
+        if done:  # If the episode has ended.
+            episode_rewards.append(total_reward)  # Record the cumulative reward for the episode.
+            plot_rewards()  # Update the plot with the new rewards data.
+            break  # Exit the loop for the current episode.
 
+    # Update the target network with the policy network's weights every TARGET_UPDATE episodes.
     if i_episode % TARGET_UPDATE == 0:
         target_net.load_state_dict(policy_net.state_dict())
 
+# Training is complete.
 print('Complete')
-plt.ioff()  # Turn off interactive mode
-plt.show()  # Keep the window open at the end of the training
+plt.ioff()  # Disable interactive mode now that training is done.
+plt.show()  # Show the plot with all the episode rewards.
