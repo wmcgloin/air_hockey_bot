@@ -163,14 +163,15 @@ class AirHockeyGame:
         return False  # Return False if no collision occurred
 
     def get_state(self):
-        # Return the current game state as an image
+        # Return the current game state as an RGB image
         state = pygame.surfarray.array3d(self.screen)
-        grayscale_state = 0.299*state[:,:,0] + 0.587*state[:,:,1] + 0.114*state[:,:,2] # convert to grayscale
-        # conver to uint8
+        # Convert to grayscale
+        grayscale_state = 0.299 * state[:,:,0] + 0.587 * state[:,:,1] + 0.114 * state[:,:,2] # using the luminosity method
+        # Convert to uint8
         grayscale_state = grayscale_state.astype(np.uint8)
-        # Add a channel dimension
-        grayscale_state = np.expand_dims(grayscale_state, axis=-1)
+        # Return the grayscale image
         return grayscale_state
+
 
     def draw_game_over(self):
         # Render game over screen with winner information and instructions

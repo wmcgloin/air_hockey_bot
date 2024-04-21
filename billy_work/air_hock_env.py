@@ -18,16 +18,19 @@ class AirHockeyEnv(gym.Env):
         self.game = AirHockeyGame(screen)  # Pass the screen to AirHockeyGame
         self.frame_buffer = deque(maxlen=3)  # Buffer to hold last three frames
         self.action_space = spaces.Discrete(9)
-        self.observation_space = spaces.Box(low=0, high=255, shape=(self.game.screen_width, self.game.screen_height, 3), dtype=np.uint8)  # Stack 3 frames
+        # If stacking along time axis but still treating each frame as independent in sequence
+        self.observation_space = spaces.Box(low=0, high=255, shape=(800, 400, 3), dtype=np.uint8)
+
         self.verbose = False
 
     def get_state(self):
         # Access the current game state from the AirHockeyGame instance
         return self.game.get_state()
 
-    def step(self, action, truncated = True):
-        reward, done, info = self.game.update(action) # Update the game with the current action
-        new_frame = self.game.get_state() # Get the new frame after the action
+    def step(self, action):
+        reward, done, info = self.game.update(action)  # Update the game with the current action
+        new_frame = self.game.get_state()  # Get the new frame after the action
+        
         if len(self.frame_buffer) < 3:
             # If we don't have enough frames yet, repeat the new frame
             while len(self.frame_buffer) < 3:
@@ -35,24 +38,17 @@ class AirHockeyEnv(gym.Env):
         else:
             # Otherwise, add the new frame to the buffer and pop the oldest
             self.frame_buffer.append(new_frame)
+
+        # Adjust here to use the latest frame directly or process buffer differently
+        obs = np.array(self.frame_buffer)[-1]  # Directly use the latest frame as the observation
+        return obs, reward, done, {}, info
         
-        # Now we concatenate along the channel dimension to form the observation
-        # print([frame.shape for frame in self.frame_buffer])
-        obs = np.concatenate(list(self.frame_buffer), axis=2)
-        return obs, reward, done, truncated, info
-        
-    def reset(self, seed=None, options=None):
-        super().reset(seed=seed)
+    def reset(self):
+        super().reset()
         initial_state = self.game.reset()
         self.frame_buffer.clear()
         [self.frame_buffer.append(initial_state) for _ in range(3)]  # Fill buffer with initial state
-        observation = np.concatenate(self.frame_buffer, axis=2)  # Concatenate frames along the channel dimension
-        if self.verbose:
-            print("Observation shape: ", observation.shape)
-            print(observation)
-            print(self.observation_space)
-        info = {}  # Optionally, you can include additional reset information here
-        return observation, info  # Return a tuple of observation and info
+        return self.frame_buffer[-1]
 
     def render(self, mode='human'):
         return self.game.draw()

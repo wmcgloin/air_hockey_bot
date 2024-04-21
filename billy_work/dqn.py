@@ -55,23 +55,23 @@ class ReplayMemory(object):
 class DQN(nn.Module):
     def __init__(self, outputs):
         super(DQN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2) # 3 input channels - stack of 3 grayscale frames
-        self.bn1 = nn.BatchNorm2d(16) # batch normalization
-        self.pool1 = nn.AvgPool2d(2)  # avg pooling
+        # Change the first convolutional layer to accept a single channel input
+        self.conv1 = nn.Conv2d(1, 16, kernel_size=5, stride=2)  # Only 1 input channel
+        self.bn1 = nn.BatchNorm2d(16)
+        self.pool1 = nn.AvgPool2d(2)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
         self.bn2 = nn.BatchNorm2d(32)
-        self.pool2 = nn.AvgPool2d(2)  # avg pooling
+        self.pool2 = nn.AvgPool2d(2)
         self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
         self.bn3 = nn.BatchNorm2d(32)
-        self.pool3 = nn.AvgPool2d(2)  # avg pooling
+        self.pool3 = nn.AvgPool2d(2)
         
-        # Calculate the size of the output from the final pooling layer
+        # Function to automatically determine the features for the linear layer
         self._to_linear = None
-        self._get_conv_output([1, 3, 800, 400])
+        self._get_conv_output([1, 1, 800, 400])  # Update to single channel input for feature size calculation
 
-        self.head = nn.Linear(self._to_linear, outputs) # linear layer to output the Q-values for each action
+        self.head = nn.Linear(self._to_linear, outputs)
 
-    # automatically determine the number of features that need to be passed to the final linear layer
     def _get_conv_output(self, shape):
         input = torch.rand(shape)
         output = self.pool1(self.bn1(self.conv1(input)))
@@ -79,13 +79,13 @@ class DQN(nn.Module):
         output = self.pool3(self.bn3(self.conv3(output)))
         self._to_linear = int(torch.numel(output) / output.shape[0])
 
-    # forward pass through the network
     def forward(self, x):
         x = F.relu(self.pool1(self.bn1(self.conv1(x))))
         x = F.relu(self.pool2(self.bn2(self.conv2(x))))
         x = F.relu(self.pool3(self.bn3(self.conv3(x))))
         x = x.view(x.size(0), -1)
         return self.head(x)
+
 
 # Assuming the outputs variable is defined (number of actions in your environment)
 # outputs = env.action_space.n (make sure to define this before initializing DQN if it's not already defined)
@@ -121,33 +121,46 @@ def select_action(state, steps_done):
 
 def optimize_model():
     if len(memory) < BATCH_SIZE:
+
         return
+
     transitions = memory.sample(BATCH_SIZE)
     batch = Transition(*zip(*transitions))
 
+    # Prepare the tensors from the sampled transitions
     non_final_mask = torch.tensor([s is not None for s in batch.next_state], device=device, dtype=torch.bool)
     non_final_next_states = torch.cat([s for s in batch.next_state if s is not None]).to(device)
+    state_batch = torch.cat([s for s in batch.state]).to(device)
+    action_batch = torch.cat([s for s in batch.action]).to(device)
+    reward_batch = torch.cat([s for s in batch.reward]).to(device)
 
-    valid_mask = torch.tensor([s is not None for s in batch.state], device=device, dtype=torch.bool)
-    valid_states = torch.stack([s[0] for s in batch.state if s is not None and s[0].shape[0] == 1]).to(device)
-    valid_actions = torch.cat([batch.action[i].unsqueeze(0) for i, s in enumerate(batch.state) if s is not None and s[0].shape[0] == 1]).to(device)
-    valid_rewards = torch.cat([batch.reward[i] for i, s in enumerate(batch.state) if s is not None and s[0].shape[0] == 1]).to(device)
+    print(f"Shape of state_batch: {state_batch.shape}")
+    print(f"Shape of action_batch: {action_batch.shape}")
 
-    valid_actions = valid_actions.long().view(-1, 1)
+    # Network forward pass
+    state_action_values = policy_net(state_batch)
 
-    state_action_values = policy_net(valid_states).gather(1, valid_actions)
+    # Ensure action_batch is correctly shaped and of the correct dtype for gather
+    action_batch = action_batch.long().view(-1, 1)
+    print(f"Shape of action_batch for gather: {action_batch.shape}")
 
-    next_state_values = torch.zeros(len(valid_states), device=device)
-    next_state_values[valid_mask & non_final_mask] = target_net(non_final_next_states).max(1)[0].detach()
+    # Using gather to select the Q-values corresponding to the taken actions
+    state_action_values = state_action_values.gather(1, action_batch)
 
-    expected_state_action_values = (next_state_values * GAMMA) + valid_rewards
+    # Compute V(s_{t+1}) for all non-final next states using the target network
+    next_state_values = torch.zeros(BATCH_SIZE, device=device)
+    if non_final_next_states.size(0) > 0:
+        next_state_values[non_final_mask] = target_net(non_final_next_states).max(1)[0].detach()
 
+    # Compute the expected Q values
+    expected_state_action_values = (next_state_values * GAMMA) + reward_batch
+
+    # Compute loss
     loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
 
+    # Backpropagation
     optimizer.zero_grad()
     loss.backward()
-    for param in policy_net.parameters():
-        param.grad.data.clamp_(-1, 1)
     optimizer.step()
 
 # Set up plotting
@@ -169,22 +182,21 @@ steps_done = 0
 for i_episode in range(NUM_EPISODES):
     env.reset()
     state = env.get_state()
-    state = torch.from_numpy(state).permute(2, 0, 1).unsqueeze(0).float().to(device)
+    state = torch.from_numpy(state).unsqueeze(0).unsqueeze(0).float().to(device)  # Ensure state is correctly shaped
     total_reward = 0
 
     for t in count():
         action = select_action(state, steps_done)
         next_state, reward, done, truncated, info = env.step(action.item())
         reward = torch.tensor([reward], device=device)
-        total_reward += reward.item()
-
+        
         if not done:
-            next_state = torch.from_numpy(next_state).permute(2, 0, 1).unsqueeze(0).float().to(device)
+            next_state = torch.from_numpy(next_state).unsqueeze(0).unsqueeze(0).float().to(device)  # Same reshaping for next_state
         else:
             next_state = None
 
         memory.push(state, action, next_state, reward)
-        state = next_state
+        state = next_state if next_state is not None else state  # Ensure continuity in states
 
         optimize_model()
         if done:
@@ -197,4 +209,4 @@ for i_episode in range(NUM_EPISODES):
 
 print('Complete')
 plt.ioff()  # Turn off interactive mode
-plt.show()  # Keep the window open at the end of the training
+plt.show()  # Display results
