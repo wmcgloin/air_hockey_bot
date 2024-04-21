@@ -121,7 +121,7 @@ def select_action(state, steps_done):
 
 def optimize_model():
     if len(memory) < BATCH_SIZE:
-
+        print("Not enough samples in memory to sample a batch")
         return
 
     transitions = memory.sample(BATCH_SIZE)
