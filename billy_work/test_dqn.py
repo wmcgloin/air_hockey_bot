@@ -1,9 +1,10 @@
-# test_env.py
+# test_dqn.py
 import warnings
 warnings.filterwarnings("ignore")
 
-from gymnasium.utils.env_checker import check_env
 from air_hock_env import AirHockeyEnv
+from dqn import DQNAgent
 
 env = AirHockeyEnv()
-check_env(env)
+agent = DQNAgent(env)
+agent.train(num_episodes=100)

@@ -1,3 +1,4 @@
+# dqn.py
 import gymnasium as gym
 import torch
 import torch.nn as nn
@@ -10,6 +11,7 @@ from collections import namedtuple, deque
 from itertools import count
 import matplotlib.pyplot as plt
 from IPython.display import display, clear_output
+from collections import namedtuple
 
 # Assuming the environment is defined as shown in your code.
 from air_hock_env import AirHockeyEnv
@@ -40,7 +42,8 @@ class ReplayMemory(object):
         self.memory = deque([], maxlen=capacity)  # Initialize a double-ended queue with a fixed maximum length
 
     def push(self, *args):
-        self.memory.append(Transition(*args))  # Append a new transition to the memory, packing any arguments into the Transition tuple
+        """Save a transition."""
+        self.memory.append(Transition(*args))
 
     def sample(self, batch_size):
         return random.sample(self.memory, batch_size)  # Randomly sample a batch of transitions from the memory
@@ -115,46 +118,37 @@ def select_action(state, steps_done):
 
 # function iteratively improves policy network by minimizing the difference between predicted Q-values 
 # and the target Q-values derived from the Bellman equation, thus refining the agent's policy to maximize future rewards
-def optimize_model():
-    # Check if the memory has enough samples to form a complete batch
-    if len(memory) < BATCH_SIZE:
-        print('Not enough samples in memory for a complete batch')
-        return # If not enough samples, exit the function
 
-    # sample a batch of transitions from the replay memory
+def optimize_model():
+    if len(memory) < BATCH_SIZE:
+        return
     transitions = memory.sample(BATCH_SIZE)
-    # Zip the batch and rearrange it into a Transition of batches instead of a batch of Transitions
     batch = Transition(*zip(*transitions))
 
-    # Create a mask to identify transitions with a non-final next state
-    non_final_mask = torch.tensor(tuple(map(lambda s: s is not None, batch.next_state)), device=device, dtype=torch.bool)
-    # Collect non-final next states into a tensor
-    non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
+    non_final_mask = torch.tensor([s is not None for s in batch.next_state], device=device, dtype=torch.bool)
+    non_final_next_states = torch.cat([s for s in batch.next_state if s is not None]).to(device)
 
-    # Concatenate all states, actions, and rewards into separate batches
-    state_batch = torch.cat(batch.state)
-    action_batch = torch.cat(batch.action)
-    reward_batch = torch.cat(batch.reward)
+    valid_mask = torch.tensor([s is not None for s in batch.state], device=device, dtype=torch.bool)
+    valid_states = torch.stack([s[0] for s in batch.state if s is not None and s[0].shape[0] == 1]).to(device)
+    valid_actions = torch.cat([batch.action[i].unsqueeze(0) for i, s in enumerate(batch.state) if s is not None and s[0].shape[0] == 1]).to(device)
+    valid_rewards = torch.cat([batch.reward[i] for i, s in enumerate(batch.state) if s is not None and s[0].shape[0] == 1]).to(device)
 
-    # Compute Q values for each state-action pair in the batch from the policy network
-    state_action_values = policy_net(state_batch).gather(1, action_batch)
+    valid_actions = valid_actions.long().view(-1, 1)
 
-    # Initialize a tensor of zeros to hold the next state values
-    next_state_values = torch.zeros(BATCH_SIZE, device=device)
-    # Update the values for non-final states from the target network (detach to avoid training the target net)
-    next_state_values[non_final_mask] = target_net(non_final_next_states).max(1)[0].detach()
+    state_action_values = policy_net(valid_states).gather(1, valid_actions)
 
-    # Compute the expected Q values for each state-action pair using the Bellman equation
-    expected_state_action_values = (next_state_values * GAMMA) + reward_batch
+    next_state_values = torch.zeros(len(valid_states), device=device)
+    next_state_values[valid_mask & non_final_mask] = target_net(non_final_next_states).max(1)[0].detach()
 
-    # Compute the loss between the current Q values and the target Q values
+    expected_state_action_values = (next_state_values * GAMMA) + valid_rewards
+
     loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
 
-    # Perform gradient descent updates
-    optimizer.zero_grad()  # Reset gradients to zero before backpropagation
-    loss.backward()  # Compute the gradient of the loss with respect to all trainable parameters
-    optimizer.step()  # Apply the gradients to update the weights
-
+    optimizer.zero_grad()
+    loss.backward()
+    for param in policy_net.parameters():
+        param.grad.data.clamp_(-1, 1)
+    optimizer.step()
 
 # Set up plotting
 plt.ion()  # Interactive mode on
