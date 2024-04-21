@@ -17,8 +17,12 @@ class AirHockeyEnv(gym.Env):
         self.game = AirHockeyGame(screen)  # Pass the screen to AirHockeyGame
         self.frame_buffer = deque(maxlen=3)  # Buffer to hold last three frames
         self.action_space = spaces.Discrete(9)
-        self.observation_space = spaces.Box(low=0, high=255, shape=(self.game.screen_width, self.game.screen_height, 3 * 3), dtype=np.uint8)  # Stack 3 frames
+        self.observation_space = spaces.Box(low=0, high=255, shape=(self.game.screen_width, self.game.screen_height, 3), dtype=np.uint8)  # Stack 3 frames
         self.verbose = False
+
+    def get_state(self):
+        # Access the current game state from the AirHockeyGame instance
+        return self.game.get_state()
 
     def step(self, action, truncated = True):
         reward, done, info = self.game.update(action) # Update the game with the current action
@@ -32,8 +36,9 @@ class AirHockeyEnv(gym.Env):
             self.frame_buffer.append(new_frame)
         
         # Now we concatenate along the channel dimension to form the observation
+        # print([frame.shape for frame in self.frame_buffer])
         obs = np.concatenate(list(self.frame_buffer), axis=2)
-        return obs, reward, done, truncated, info
+        return obs, reward, done, truncated#, info
         
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)

@@ -165,7 +165,10 @@ class AirHockeyGame:
     def get_state(self):
         # Return the current game state as an image
         state = pygame.surfarray.array3d(self.screen)
-        return state
+        grayscale_state = 0.299*state[:,:,0] + 0.587*state[:,:,1] + 0.114*state[:,:,2] # convert to grayscale
+        # Add a channel dimension
+        grayscale_state = np.expand_dims(grayscale_state, axis=-1)
+        return grayscale_state
 
     def draw_game_over(self):
         # Render game over screen with winner information and instructions
