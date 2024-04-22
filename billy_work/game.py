@@ -35,9 +35,13 @@ class AirHockeyGame:
         if self.mode == 'pve':
             self.setup_pve()  # Set up the game for player vs environment mode
         if self.mode == 'rlve':
+            # print("RLVE MODE")
             self.setup_rlve()
         if self.mode == 'random':
             self.setup_random()
+
+        self.puck.reset()  # Reset the puck position and direction
+
 
     def reset(self):
         # Reset the game state
@@ -158,9 +162,7 @@ class AirHockeyGame:
             self.player2_paddle.update_position()
         elif self.mode == 'rlve':
             self.update_rlve(action)
-            # Reward calculation
-            reward += self.calculate_rewards()  # Add the calculated rewards to the total reward for this update
-            return reward, self.game_over, {}
+
         else:
             # update random ai
             self.update_random()
@@ -205,6 +207,11 @@ class AirHockeyGame:
         self.check_for_reset()  # Check for reset puck
         self.check_goal()  # Check if a goal has been scored
         self.check_collisions()  # Check for collisions between the puck and paddles
+
+        if self.mode == 'rlve':
+            # Reward calculation
+            reward += self.calculate_rewards()  # Add the calculated rewards to the total reward for this update
+            return reward, self.game_over, {}
     
     def calculate_rewards(self):
         reward = 0  # Initialize reward
@@ -240,7 +247,9 @@ class AirHockeyGame:
         # conver to uint8
         grayscale_state = grayscale_state.astype(np.uint8)
         # Add a channel dimension
+        grayscale_state = np.mean(grayscale_state.reshape(16, 50, 8, 50), axis=(1, 3))
         grayscale_state = np.expand_dims(grayscale_state, axis=-1)
+        # print(grayscale_state.shape)
         return grayscale_state
 
     def draw_game_over(self):
@@ -262,7 +271,7 @@ class AirHockeyGame:
         # left goal (player 2 scores)
         if self.left_goal.collidepoint(self.puck.x, self.puck.y):
             self.player2_score += 1
-            if self.player2_score >= 7:
+            if self.player2_score >= 2:
                 self.game_over = True
                 self.winner = "Player 2"
             self.reset_puck()
@@ -270,7 +279,7 @@ class AirHockeyGame:
         # right goal (player 1 scores)
         elif self.right_goal.collidepoint(self.puck.x, self.puck.y):
             self.player1_score += 1
-            if self.player1_score >= 7:
+            if self.player1_score >= 2:
                 self.game_over = True
                 self.winner = "Player 1"
             self.reset_puck()
