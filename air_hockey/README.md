@@ -15,3 +15,7 @@ RL FILES:
 * dqn.py
 
 Air hockey environment is implemented in `air_hock_env.py`. To test the environment, run `test_env.py` or `test_env2.py`. `dq.py` contains the DQN implementation and trains the model.
+
+Current Reward Structure: 3 points for a win (which is now 2 goals for training), 1 point for a goal, 0.33 points for hitting the puck, -1 point for getting scored on, and -3 points for losing.
+
+Additional Note: the puck and paddle speeds have all been increased by a factor of 5 to expedite training.

@@ -223,12 +223,12 @@ class AirHockeyGame:
         # winning/losing
         if self.game_over:
             if self.winner == "Player 1":
-                reward -= 5.0  # penalty for losing
+                reward -= 3.0  # penalty for losing
             elif self.winner == "Player 2":
-                reward += 5.0  # reward for winning
+                reward += 3.0  # reward for winning
         # puck collision with paddles
         if self.rl_ai_paddle and self.check_paddle_collision(self.rl_ai_paddle):
-            reward += 0.2  # Reward for paddle2 (rl_ai_paddle) coming into contact with the puck
+            reward += 0.33  # Reward for paddle2 (rl_ai_paddle) coming into contact with the puck
         return reward  
 
     def check_paddle_collision(self, paddle):
