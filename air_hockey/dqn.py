@@ -11,6 +11,7 @@ from itertools import count
 import matplotlib.pyplot as plt
 from IPython.display import display, clear_output
 from air_hock_env import AirHockeyEnv
+import os
 
 import os
 
@@ -29,9 +30,9 @@ EPS_START = 0.95  # Initial epsilon value for epsilon-greedy action selection
 EPS_END = 0.05  # Final epsilon value for epsilon-greedy action selection
 EPS_DECAY = 200  # Rate at which epsilon decreases
 LR = 1e-4  # Learning rate for the optimizer
-TARGET_UPDATE = 10  # How often to update the target network
+TARGET_UPDATE = 25  # How often to update the target network
 MEMORY_CAPACITY = 10000  # Capacity of the replay memory
-NUM_EPISODES = 50  # Number of episodes to train
+NUM_EPISODES = 3000  # Number of episodes to train
 
 # Replay memory to store transitions
 Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
@@ -180,6 +181,7 @@ def plot_rewards():
 # Start of the training loop.
 steps_done = 0  # Initialize the step counter.
 for i_episode in range(NUM_EPISODES):  # Loop over each episode.
+    steps_done +=1
     print(i_episode)   
     env.reset()  # Reset the environment at the start of each episode.
     if i_episode % 10 == 0:
@@ -217,7 +219,7 @@ for i_episode in range(NUM_EPISODES):  # Loop over each episode.
 
         optimize_model()  # Optimize the model using the collected experience.
         if t % 100 == 0:
-            print("Episode: ", i_episode, "Step: ", t, "Reward: ", reward.item(), "Total Reward: ", total_reward, "Epsilon: ", EPS_END + (EPS_START - EPS_END) * math.exp(-1. * steps_done / EPS_DECAY))
+            print("Episode: ", i_episode, "Step: ", t, "Reward: ", reward.item(), "Total Reward: ", total_reward, "Epsilon: ", EPS_END + (EPS_START - EPS_END) * math.exp(-1. * (steps_done/4) / EPS_DECAY))
         if done:  # If the episode has ended.
             episode_rewards.append(total_reward)  # Record the cumulative reward for the episode.
             plot_rewards()  # Update the plot with the new rewards data.
