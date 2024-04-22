@@ -212,7 +212,7 @@ class AirHockeyGame:
             # Reward calculation
             reward += self.calculate_rewards()  # Add the calculated rewards to the total reward for this update
             return reward, self.game_over, {}
-    
+    #############################################################################################################################CALC REWARDS
     def calculate_rewards(self):
         reward = 0.0  # Initialize reward
         # goals

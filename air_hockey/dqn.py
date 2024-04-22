@@ -122,7 +122,7 @@ def select_action(state, steps_done):
 def optimize_model():
     # Check if the memory has enough samples to form a complete batch
     if len(memory) < BATCH_SIZE:
-        print('Not enough samples in memory for a complete batch')
+        # print('Not enough samples in memory for a complete batch')                #Commented out no value for testing code
         return # If not enough samples, exit the function
 
     # sample a batch of transitions from the replay memory
@@ -178,6 +178,7 @@ def plot_rewards():
 
 # Start of the training loop.
 steps_done = 0  # Initialize the step counter.
+print("###Starting Training Loop###")                                                                   #line to note training is started
 for i_episode in range(NUM_EPISODES):  # Loop over each episode.
     steps_done +=1
     print(i_episode)   
@@ -216,9 +217,10 @@ for i_episode in range(NUM_EPISODES):  # Loop over each episode.
         state = next_state  # Update the state for the next iteration.
 
         optimize_model()  # Optimize the model using the collected experience.
-        if t % 100 == 0:
-            print("Episode: ", i_episode, "Step: ", t, "Reward: ", reward.item(), "Total Reward: ", total_reward, "Epsilon: ", EPS_END + (EPS_START - EPS_END) * math.exp(-1. * (steps_done/8) / EPS_DECAY))
+        # if t % 100 == 0:
+        #     print("Episode: ", i_episode, "Step: ", t, "Reward: ", reward.item(), "Total Reward: ", total_reward, "Epsilon: ", EPS_END + (EPS_START - EPS_END) * math.exp(-1. * (steps_done/8) / EPS_DECAY))
         if done:  # If the episode has ended.
+            print("Episode: ", i_episode, "Step: ", t, "Reward: ", reward.item(), "Total Reward: ", total_reward, "Epsilon: ", EPS_END + (EPS_START - EPS_END) * math.exp(-1. * (steps_done/8) / EPS_DECAY))
             episode_rewards.append(total_reward)  # Record the cumulative reward for the episode.
             plot_rewards()  # Update the plot with the new rewards data.
             break  # Exit the loop for the current episode.
