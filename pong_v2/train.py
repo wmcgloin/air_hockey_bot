@@ -11,6 +11,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from pong_v2_env import PongV2
+import matplotlib.pyplot as plt
+from IPython.display import display, clear_output
+
+
+# Directory for saving model checkpoints
+checkpoint_dir = './checkpoints'
+if not os.path.exists(checkpoint_dir):
+    os.makedirs(checkpoint_dir)
 
 class DQN(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -27,7 +35,7 @@ class DQN(nn.Module):
 @dataclass
 class Config:
     seed: int = 1
-    episodes: int = 10000000
+    episodes: int = 5000000
     learning_rate: float = 0.0005
     gamma: float = 0.99  # Discount factor for future rewards
     epsilon_start: float = 1.0  # Start value of epsilon
@@ -47,6 +55,22 @@ def make_env(cfg):
 
 def capture_frame(frame, video_writer):
     video_writer.write(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+
+
+
+# Set up for live updating of a plot during the training process.
+plt.ion()  # Enable interactive mode, which allows dynamic updates to the plot.
+fig, ax = plt.subplots()  # Create a new figure and axes for plotting.
+episode_rewards = []  # Initialize a list to store the cumulative rewards of each episode.
+
+# Function definition to plot the rewards after each episode.
+def plot_rewards():
+    ax.clear()  # Clear the current axes.
+    ax.plot(episode_rewards)  # Plot the cumulative rewards per episode.
+    ax.set_title('Episode vs Rewards')  # Set the title of the plot.
+    ax.set_xlabel('Episode')  # Label the x-axis as 'Episode'.
+    ax.set_ylabel('Cumulative Reward')  # Label the y-axis as 'Cumulative Reward'.
+    plt.draw()  # Redraw the current figure.
 
 def train(cfg):
     verbose = False
@@ -151,6 +175,18 @@ def train(cfg):
             
             if steps_done % 1000 == 0:
                 print("Episode: ", episode, " Loss: ", loss.item()," Reward: ", rewards_mean, " Epsilon: ", epsilon)
+
+            # Save the model every 250 episodes
+            if steps_done % 10000 == 0:
+                print("Saving model")
+                checkpoint_path = os.path.join(checkpoint_dir, f'policy_net_episode_{steps_done}.pth')
+                torch.save(model.state_dict(), checkpoint_path)
+                print(f"Saved model checkpoint at episode {steps_done} to {checkpoint_path}")
+
+        if steps_done % 50 == 0 & steps_done > 0:
+            episode_rewards.append(rewards_mean)  # Record the cumulative reward for the episode.
+            plot_rewards()  # Update the plot with the new rewards data.
+            # Exit the loop for the current episode.
 
         steps_done += 1
 

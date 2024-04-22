@@ -106,7 +106,7 @@ memory = ReplayMemory(MEMORY_CAPACITY)  # Create a ReplayMemory object with a de
 def select_action(state, steps_done):
     sample = random.random()  # Generate a random sample for epsilon-greedy strategy
     # Calculate epsilon threshold for epsilon-greedy action selection
-    eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1. * steps_done / EPS_DECAY)
+    eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1. * (steps_done/8) / EPS_DECAY)
     if sample > eps_threshold:
         # print("NON RANDOM ACTION")
         with torch.no_grad():  # Temporarily set all the requires_grad flag to false
