@@ -13,8 +13,6 @@ from IPython.display import display, clear_output
 from air_hock_env import AirHockeyEnv
 import os
 
-import os
-
 # Directory for saving model checkpoints
 checkpoint_dir = './checkpoints'
 if not os.path.exists(checkpoint_dir):
@@ -30,9 +28,9 @@ EPS_START = 0.95  # Initial epsilon value for epsilon-greedy action selection
 EPS_END = 0.05  # Final epsilon value for epsilon-greedy action selection
 EPS_DECAY = 200  # Rate at which epsilon decreases
 LR = 1e-4  # Learning rate for the optimizer
-TARGET_UPDATE = 25  # How often to update the target network
+TARGET_UPDATE = 50  # How often to update the target network
 MEMORY_CAPACITY = 10000  # Capacity of the replay memory
-NUM_EPISODES = 3000  # Number of episodes to train
+NUM_EPISODES = 5000  # Number of episodes to train
 
 # Replay memory to store transitions
 Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
@@ -219,14 +217,14 @@ for i_episode in range(NUM_EPISODES):  # Loop over each episode.
 
         optimize_model()  # Optimize the model using the collected experience.
         if t % 100 == 0:
-            print("Episode: ", i_episode, "Step: ", t, "Reward: ", reward.item(), "Total Reward: ", total_reward, "Epsilon: ", EPS_END + (EPS_START - EPS_END) * math.exp(-1. * (steps_done/4) / EPS_DECAY))
+            print("Episode: ", i_episode, "Step: ", t, "Reward: ", reward.item(), "Total Reward: ", total_reward, "Epsilon: ", EPS_END + (EPS_START - EPS_END) * math.exp(-1. * (steps_done/8) / EPS_DECAY))
         if done:  # If the episode has ended.
             episode_rewards.append(total_reward)  # Record the cumulative reward for the episode.
             plot_rewards()  # Update the plot with the new rewards data.
             break  # Exit the loop for the current episode.
 
     # Save the model every 250 episodes
-    if i_episode % 1 == 0:
+    if i_episode % 250 == 0:
         print("Saving model")
         checkpoint_path = os.path.join(checkpoint_dir, f'policy_net_episode_{i_episode}.pth')
         torch.save(policy_net.state_dict(), checkpoint_path)
