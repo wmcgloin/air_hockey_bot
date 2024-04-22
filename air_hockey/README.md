@@ -1,11 +1,17 @@
-Basic two-player air-hockey game.
 
-Player 1 uses WASD to move and player 2 uses the arrow keys.
 
-The game is played to 7 points.
+GAME FILES:
+* main.py
+* game.py
+* paddle.py
+* puck.py*
 
-Run 'python main.py' to start the game.
+To play game, run `main.py` in terminal. Can optionally pass in --mode "pvp", "pve", or "random" to play against another player, a bot, or watch two bots play against each other.
 
-The game is built using the Pygame library.
+RL FILES:
+* air_hock_env.py
+* test_env.py
+* test_env2.py
+* dqn.py
 
-Main.py is the main file that runs the game, while game.py contains the game class and all the game logic, calling the puck and paddle classes.
+Air hockey environment is implemented in `air_hock_env.py`. To test the environment, run `test_env.py` or `test_env2.py`. `dq.py` contains the DQN implementation and trains the model.

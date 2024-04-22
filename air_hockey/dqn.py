@@ -176,7 +176,8 @@ steps_done = 0  # Initialize the step counter.
 for i_episode in range(NUM_EPISODES):  # Loop over each episode.
     print(i_episode)   
     env.reset()  # Reset the environment at the start of each episode.
-    env.render()
+    if i_episode % 10 == 0:
+        env.render()
     state = env.get_state()  # Get the initial state from the environment.
     # Process the state to match the expected input format of the neural network and send to the computing device.
     # print(state.shape) # (800, 400, 1)
