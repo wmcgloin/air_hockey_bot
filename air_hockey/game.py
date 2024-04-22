@@ -20,7 +20,7 @@ class AirHockeyGame:
 
         # Set up the goals
         self.goal_width = 125  # Width of the goal area
-        self.goal_height = 15  # Height of the goal, extending from top and bottom of the screen
+        self.goal_height = 20  # Height of the goal, extending from top and bottom of the screen
         self.left_goal = pygame.Rect(0, (self.screen_height - self.goal_width) // 2, self.goal_height, self.goal_width)
         self.right_goal = pygame.Rect(self.screen_width - self.goal_height, (self.screen_height - self.goal_width) // 2, self.goal_height, self.goal_width)
         
@@ -131,7 +131,7 @@ class AirHockeyGame:
             return False
         return True
 
-    def check_for_reset(self, max_ticks = 300):
+    def check_for_reset(self, max_ticks = 100):
         if self.tick_count >= max_ticks:
             # Timeout action
             self.puck.reset()  # Reset the puck
@@ -214,21 +214,21 @@ class AirHockeyGame:
             return reward, self.game_over, {}
     
     def calculate_rewards(self):
-        reward = 0  # Initialize reward
+        reward = 0.0  # Initialize reward
         # goals
         if self.left_goal.collidepoint(self.puck.x, self.puck.y): # player 2 (RL) scores
-            reward += 10 # Reward for scoring a goal 
+            reward += 1.0 # Reward for scoring a goal 
         if self.right_goal.collidepoint(self.puck.x, self.puck.y): # player 1 scores
-            reward -= 10 # Penalty for letting the puck into the goal
+            reward -= 1.0 # Penalty for letting the puck into the goal
         # winning/losing
         if self.game_over:
             if self.winner == "Player 1":
-                reward -= 100  # penalty for losing
+                reward -= 5.0  # penalty for losing
             elif self.winner == "Player 2":
-                reward += 100  # reward for winning
+                reward += 5.0  # reward for winning
         # puck collision with paddles
         if self.rl_ai_paddle and self.check_paddle_collision(self.rl_ai_paddle):
-            reward += 0.5  # Reward for paddle2 (rl_ai_paddle) coming into contact with the puck
+            reward += 0.2  # Reward for paddle2 (rl_ai_paddle) coming into contact with the puck
         return reward  
 
     def check_paddle_collision(self, paddle):

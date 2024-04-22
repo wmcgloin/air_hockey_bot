@@ -210,6 +210,8 @@ for i_episode in range(NUM_EPISODES):  # Loop over each episode.
         state = next_state  # Update the state for the next iteration.
 
         optimize_model()  # Optimize the model using the collected experience.
+        if t % 100 == 0:
+            print("Episode: ", i_episode, "Step: ", t, "Reward: ", reward.item(), "Total Reward: ", total_reward, "Epsilon: ", EPS_END + (EPS_START - EPS_END) * math.exp(-1. * steps_done / EPS_DECAY))
         if done:  # If the episode has ended.
             episode_rewards.append(total_reward)  # Record the cumulative reward for the episode.
             plot_rewards()  # Update the plot with the new rewards data.
