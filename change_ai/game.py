@@ -131,7 +131,7 @@ class AirHockeyGame:
             return False
         return True
 
-    def check_for_reset(self, max_ticks = 100):
+    def check_for_reset(self, max_ticks = 300):
         if self.tick_count >= max_ticks:
             # Timeout action
             self.puck.reset()  # Reset the puck
