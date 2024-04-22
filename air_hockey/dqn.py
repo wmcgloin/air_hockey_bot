@@ -12,6 +12,12 @@ import matplotlib.pyplot as plt
 from IPython.display import display, clear_output
 from air_hock_env import AirHockeyEnv
 
+import os
+
+# Directory for saving model checkpoints
+checkpoint_dir = './checkpoints'
+if not os.path.exists(checkpoint_dir):
+    os.makedirs(checkpoint_dir)
 
 env = AirHockeyEnv(render_mode='human')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -217,6 +223,13 @@ for i_episode in range(NUM_EPISODES):  # Loop over each episode.
             plot_rewards()  # Update the plot with the new rewards data.
             break  # Exit the loop for the current episode.
 
+    # Save the model every 250 episodes
+    if i_episode % 1 == 0:
+        print("Saving model")
+        checkpoint_path = os.path.join(checkpoint_dir, f'policy_net_episode_{i_episode}.pth')
+        torch.save(policy_net.state_dict(), checkpoint_path)
+        print(f"Saved model checkpoint at episode {i_episode} to {checkpoint_path}")
+    
     # Update the target network with the policy network's weights every TARGET_UPDATE episodes.
     if i_episode % TARGET_UPDATE == 0:
         target_net.load_state_dict(policy_net.state_dict())
