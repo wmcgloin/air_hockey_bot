@@ -55,35 +55,31 @@ class ReplayMemory(object):
 class DQN(nn.Module):
     def __init__(self, outputs):
         super(DQN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1)  # Small kernel, stride 1
+        self.conv1 = nn.Conv2d(3, 16, kernel_size=4)  # Small kernel, stride 1
         self.bn1 = nn.BatchNorm2d(16)
-        self.pool1 = nn.AvgPool2d(2)  # Pooling to reduce dimension
 
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)  # Small kernel, stride 1
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=4)  # Small kernel, stride 1
         self.bn2 = nn.BatchNorm2d(32)
-        self.pool2 = nn.AvgPool2d(2)  # Pooling to reduce dimension
 
-        # Remove third conv and pool layer to prevent output dimension collapse
-        # Instead, use a conv layer if needed, but avoid pooling
-
-        # Calculate the size of the output from the pooling layer
+        # Calculate the size of the output
         self._to_linear = None
         self._get_conv_output([1, 3, 16, 8])  # Input shape sample
 
-        self.head = nn.Linear(self._to_linear, outputs)  # Linear layer to output the Q-values for each action
+        self.linear = nn.Linear(self._to_linear, 18)  # Linear layer to output the Q-values for each action
+        self.head = nn.Linear(18, outputs)  # Head layer to output the final Q-values
 
     def _get_conv_output(self, shape):
         input = torch.rand(shape)
-        output = self.pool1(self.bn1(self.conv1(input)))
-        output = self.pool2(self.bn2(self.conv2(output)))
+        output = self.bn1(self.conv1(input))
+        output = self.bn2(self.conv2(output))
         # Since we're skipping the third conv+pool, this is our final output dimension
         self._to_linear = int(torch.numel(output) / output.shape[0])
 
     def forward(self, x):
-        x = F.relu(self.pool1(self.bn1(self.conv1(x))))
-        x = F.relu(self.pool2(self.bn2(self.conv2(x))))
-        # Skip additional pooling to maintain a reasonable feature map size
-        x = x.view(x.size(0), -1)  # Flatten the features for the linear layer
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = x.view(x.size(0), -1)  # Flatten the features before the linear layer
+        x = F.relu(self.linear(x))
         return self.head(x)
 
 # Assuming the outputs variable is defined (number of actions in your environment)

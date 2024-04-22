@@ -176,7 +176,7 @@ def train(cfg):
             if steps_done % 1000 == 0:
                 print("Episode: ", episode, " Loss: ", loss.item()," Reward: ", rewards_mean, " Epsilon: ", epsilon)
 
-            # Save the model every 250 episodes
+            # Save the model every 10,000 episodes
             if steps_done % 10000 == 0:
                 print("Saving model")
                 checkpoint_path = os.path.join(checkpoint_dir, f'policy_net_episode_{steps_done}.pth')
