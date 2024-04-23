@@ -35,7 +35,7 @@ class DQN(nn.Module):
 @dataclass
 class Config:
     seed: int = 1
-    episodes: int = 5000000
+    episodes: int = 500000
     learning_rate: float = 0.0005
     gamma: float = 0.99  # Discount factor for future rewards
     epsilon_start: float = 1.0  # Start value of epsilon

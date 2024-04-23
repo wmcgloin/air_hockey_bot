@@ -43,13 +43,13 @@ class PongV2(gym.Env):
         return np.concatenate([self.puck_position, self.puck_velocity, self.player_paddle_position, self.ai_paddle_position])
 
     def _handle_player_action(self, action):
-        if action == 0 and self.player_paddle_position[0] > 0:  # Move left
+        if action == 0 and self.player_paddle_position[0] > 20:  # Move left
             self.player_paddle_position[0] -= 5
-        elif action == 1 and self.player_paddle_position[0] < 640:  # Move right
+        elif action == 1 and self.player_paddle_position[0] < 620:  # Move right
             self.player_paddle_position[0] += 5
         elif action == 2 and self.player_paddle_position[1] > 240:  # Move up
             self.player_paddle_position[1] -= 5
-        elif action == 3 and self.player_paddle_position[1] < 480:  # Move down
+        elif action == 3 and self.player_paddle_position[1] < 460:  # Move down
             self.player_paddle_position[1] += 5
 
     def _update_puck(self):
@@ -78,16 +78,27 @@ class PongV2(gym.Env):
     # Apply a random horizontal movement more strongly
         random_shift = np.random.randint(-10, 10)  # Wider range for more pronounced random movement
         self.ai_paddle_position[0] += random_shift
-        
+        random_shift = np.random.randint(-10, 10)  # Wider range for more pronounced random movement
+        self.ai_paddle_position[1] += random_shift
+
+
         # Conditional deterministic movement towards the puck with a relaxed condition
         if self.puck_position[0] > self.ai_paddle_position[0] + 30:  # Slightly increased buffer for movement
             self.ai_paddle_position[0] += 3  # Increase the step size for faster catching up
         elif self.puck_position[0] < self.ai_paddle_position[0] - 30:
             self.ai_paddle_position[0] -= 3
 
-    # Ensure AI paddle doesn't move out of bounds
-        self.ai_paddle_position[0] = np.clip(self.ai_paddle_position[0], 0, 640)
+        # Conditional deterministic movement towards the puck with a relaxed condition
+        if self.puck_position[1] > self.ai_paddle_position[1] + 30:  # Slightly increased buffer for movement
+            self.ai_paddle_position[1] += 3  # Increase the step size for faster catching up
+        elif self.puck_position[1] < self.ai_paddle_position[1] - 30:
+            self.ai_paddle_position[1] -= 3
 
+        # Ensure AI paddle doesn't move out of bounds   
+
+        self.ai_paddle_position[0] = np.clip(self.ai_paddle_position[0], 0, 620)
+        self.ai_paddle_position[1] = np.clip(self.ai_paddle_position[1], 20, 240)
+        
     def _check_goal(self):
         if self.puck_position[1] >= 480:
             self.score_ai += 1
@@ -103,7 +114,7 @@ class PongV2(gym.Env):
         pygame.draw.rect(self.screen, (0, 0, 255), (*self.player_paddle_position, 60, 10))
         pygame.draw.rect(self.screen, (255, 255, 255), (*self.ai_paddle_position, 60, 10))
         pygame.display.flip()
-        self.clock.tick(2000)
+        self.clock.tick(60)
 
 
     def close(self):
