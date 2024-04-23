@@ -78,16 +78,27 @@ class PongV2(gym.Env):
     # Apply a random horizontal movement more strongly
         random_shift = np.random.randint(-10, 10)  # Wider range for more pronounced random movement
         self.ai_paddle_position[0] += random_shift
-        
+        random_shift = np.random.randint(-10, 10)  # Wider range for more pronounced random movement
+        self.ai_paddle_position[1] += random_shift
+
+
         # Conditional deterministic movement towards the puck with a relaxed condition
         if self.puck_position[0] > self.ai_paddle_position[0] + 30:  # Slightly increased buffer for movement
             self.ai_paddle_position[0] += 3  # Increase the step size for faster catching up
         elif self.puck_position[0] < self.ai_paddle_position[0] - 30:
             self.ai_paddle_position[0] -= 3
 
-    # Ensure AI paddle doesn't move out of bounds
-        self.ai_paddle_position[0] = np.clip(self.ai_paddle_position[0], 0, 640)
+        # Conditional deterministic movement towards the puck with a relaxed condition
+        if self.puck_position[1] > self.ai_paddle_position[1] + 30:  # Slightly increased buffer for movement
+            self.ai_paddle_position[1] += 3  # Increase the step size for faster catching up
+        elif self.puck_position[1] < self.ai_paddle_position[1] - 30:
+            self.ai_paddle_position[1] -= 3
 
+        # Ensure AI paddle doesn't move out of bounds   
+
+        self.ai_paddle_position[0] = np.clip(self.ai_paddle_position[0], 0, 640)
+        self.ai_paddle_position[1] = np.clip(self.ai_paddle_position[1], 480, 0)
+        
     def _check_goal(self):
         if self.puck_position[1] >= 480:
             self.score_ai += 1
