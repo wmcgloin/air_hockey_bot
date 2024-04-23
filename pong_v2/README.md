@@ -11,3 +11,6 @@ pip install numpy gym torch
 
 python train.py  
 ```
+
+
+run test.py to test the model. Modify bottommost lines to modify tester behavior.
