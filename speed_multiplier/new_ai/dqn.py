@@ -31,11 +31,11 @@ BATCH_SIZE = 64
 GAMMA = 0.99  # Discount factor for future rewards
 EPS_START = 0.95  # Initial epsilon value for epsilon-greedy action selection
 EPS_END = 0.05  # Final epsilon value for epsilon-greedy action selection
-EPS_DECAY = 2000  # Rate at which epsilon decreases
+EPS_DECAY = 80000  # Rate at which epsilon decreases
 LR = 1e-4  # Learning rate for the optimizer
-TARGET_UPDATE = 100  # How often to update the target network
+TARGET_UPDATE = 1000  # How often to update the target network
 MEMORY_CAPACITY = 10000  # Capacity of the replay memory
-NUM_EPISODES = 10000  # Number of episodes to train
+NUM_EPISODES = 500000  # Number of episodes to train
 
 # Replay memory to store transitions
 Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
@@ -301,7 +301,7 @@ for i_episode in range(NUM_EPISODES):  # Loop over each episode.
     # Realtime logging
     # if verbose:
 
-    if i_episode % 50 == 0:
+    if i_episode % 500 == 0:
         print('Time: %s' % datetime.datetime.now())
 
         print("Episode: ", i_episode, "Total Reward: ", total_reward, "Loss: ", average_loss, "Epsilon: ", epsilon_value)
@@ -309,7 +309,7 @@ for i_episode in range(NUM_EPISODES):  # Loop over each episode.
 
 
 
-    if i_episode % 250 == 0:
+    if i_episode % 2500 == 0:
         print("Saving model")
         checkpoint_path = os.path.join(checkpoint_dir, f'policy_net_episode_{i_episode}.pth')
         torch.save(policy_net.state_dict(), checkpoint_path)
