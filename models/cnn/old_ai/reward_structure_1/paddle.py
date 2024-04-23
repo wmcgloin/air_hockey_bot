@@ -7,7 +7,7 @@ class Paddle:
         self.x = x  # X-coordinate of the paddle's center
         self.y = y  # Y-coordinate of the paddle's center
         self.radius = radius  # Radius of the paddle
-        self.speed = 5  # Speed of the paddle in pixels per second
+        self.speed = 30  # Speed of the paddle in pixels per second
         self.dx = 0  # Initial horizontal velocity
         self.dy = 0  # Initial vertical velocity
         self.screen_width = screen_width  # Total width of the game screen

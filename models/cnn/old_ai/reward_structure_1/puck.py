@@ -25,7 +25,7 @@ class Puck:
     def launch_puck(self):
         # Randomly set the initial direction and speed of the puck
         angle = random.uniform(0, 2 * math.pi)  # Choose a random angle in radians
-        initial_speed = 4  # Set a constant initial speed
+        initial_speed = 15  # Set a constant initial speed
         self.dx = initial_speed * math.cos(angle)  # Horizontal component of the speed
         self.dy = initial_speed * math.sin(angle)  # Vertical component of the speed
 
@@ -36,7 +36,7 @@ class Puck:
 
         # Enforce a maximum speed to prevent the puck from moving too fast
         speed = math.sqrt(self.dx**2 + self.dy**2)
-        max_speed = 12  # Define the maximum allowable speed
+        max_speed = 60  # Define the maximum allowable speed
         if speed > max_speed:
             scale = max_speed / speed
             self.dx *= scale
