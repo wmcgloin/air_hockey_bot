@@ -110,6 +110,8 @@ def train(cfg):
         if random.random() > epsilon:
             with torch.no_grad():
                 state_tensor = torch.FloatTensor(state).to(device)
+                print("State Tensor: ", state_tensor)
+                print("Model Returns: ", model(state_tensor).argmax().item())
                 action = model(state_tensor).argmax().item()
         else:
             action = env.action_space.sample()
