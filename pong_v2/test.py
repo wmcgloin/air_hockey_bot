@@ -52,7 +52,7 @@ def run_model_in_env(model, env):
 
 env = PongV2()
 ### SINGLE MODEL
-model_path = './checkpoints/policy_net_episode_70000.pth'
+model_path = './checkpoints/policy_net_episode_490000.pth'
 while True:
     model = load_model(model_path)
     run_model_in_env(model, env)
