@@ -53,8 +53,8 @@ def make_env(cfg):
     # env.seed(cfg.seed)
     return env
 
-def capture_frame(frame, video_writer):
-    video_writer.write(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+# def capture_frame(frame, video_writer):
+#     video_writer.write(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
 
 
 

@@ -103,7 +103,7 @@ class PongV2(gym.Env):
         pygame.draw.rect(self.screen, (0, 0, 255), (*self.player_paddle_position, 60, 10))
         pygame.draw.rect(self.screen, (255, 255, 255), (*self.ai_paddle_position, 60, 10))
         pygame.display.flip()
-        self.clock.tick(1000)
+        self.clock.tick(2000)
 
 
     def close(self):
