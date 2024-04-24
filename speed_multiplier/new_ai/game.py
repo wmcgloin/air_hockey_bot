@@ -5,7 +5,7 @@ from paddle import Paddle
 import numpy as np
 
 class AirHockeyGame:
-    def __init__(self, screen, mode = 'rlve', speed_multiplier=1.0, render_mode='rgb_array'):
+    def __init__(self, screen, mode = 'rlve', speed_multiplier=1.0, render_mode='rgb_array', verbose=False):
         # Initialize game settings
         self.render_mode = render_mode  # Set the render mode for the game
         self.screen = screen  # Reference to the display window
@@ -14,6 +14,7 @@ class AirHockeyGame:
         self.winner = None  # Variable to store the winner of the game
         mid_point = self.screen_width // 2  # Calculate the middle point of the screen width
         self.speed_multiplier = speed_multiplier
+        self.verbose = verbose
 
 
         # Create game objects
@@ -110,7 +111,8 @@ class AirHockeyGame:
 
         elif mode == 'play':
             # pygame.event.pump()
-            print("PLAY MODE ACTIVE")
+            if self.verbose:
+                print("PLAY MODE ACTIVE")
             self.basic_ai_paddle = self.player1_paddle
             keys = pygame.key.get_pressed()  # Get current key states within the frame
             self.player1_paddle.dx = self.player1_paddle.speed * (keys[pygame.K_d] - keys[pygame.K_a])
