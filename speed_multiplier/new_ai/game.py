@@ -5,8 +5,9 @@ from paddle import Paddle
 import numpy as np
 
 class AirHockeyGame:
-    def __init__(self, screen, mode = 'rlve', speed_multiplier=1.0):
+    def __init__(self, screen, mode = 'rlve', speed_multiplier=1.0, render_mode='rgb_array'):
         # Initialize game settings
+        self.render_mode = render_mode  # Set the render mode for the game
         self.screen = screen  # Reference to the display window
         self.screen_width, self.screen_height = screen.get_size()  # Get the dimensions of the screen
         self.game_over = False  # Flag to determine if the game has ended
@@ -37,7 +38,6 @@ class AirHockeyGame:
         if self.mode == 'pve':
             self.setup_pve()  # Set up the game for player vs environment mode
         if self.mode == 'rlve':
-            # print("RLVE MODE")
             self.setup_rlve()
         if self.mode == 'random':
             self.setup_random()
@@ -89,24 +89,35 @@ class AirHockeyGame:
                 self.basic_ai_paddle.dx = 0
             self.basic_ai_paddle.update_position()
 
-    def update_rlve(self, action = None):
-        # update basic ai
-        if self.basic_ai_paddle:
-            # Simple AI that moves the paddle towards the puck's y position
-            if self.puck.y > self.basic_ai_paddle.y + self.basic_ai_difficulty * 60: # creates slight reaction delay
-                self.basic_ai_paddle.dy = self.basic_ai_paddle.speed
-            elif self.puck.y < self.basic_ai_paddle.y - self.basic_ai_difficulty * 60: # creates slight reaction delay
-                self.basic_ai_paddle.dy = -self.basic_ai_paddle.speed
-            else:
-                self.basic_ai_paddle.dy = 0
-            if self.puck.x > self.basic_ai_paddle.x + self.basic_ai_difficulty * 250: # creates slight reaction delay
-                self.basic_ai_paddle.dx = self.basic_ai_paddle.speed
-            elif self.puck.x < self.basic_ai_paddle.x - self.basic_ai_difficulty * 250: # creates slight reaction delay
-                self.basic_ai_paddle.dx = -self.basic_ai_paddle.speed
-            else:
-                self.basic_ai_paddle.dx = 0
-            self.basic_ai_paddle.update_position()
-        # update rl ai
+    def update_rlve(self, action = None, mode=None):
+        ### UPDATE PADDLE MOVEMENT ------ BOT
+        if mode == 'train':
+            if self.basic_ai_paddle:
+                # Simple AI that moves the paddle towards the puck's y position
+                if self.puck.y > self.basic_ai_paddle.y + self.basic_ai_difficulty * 60: # creates slight reaction delay
+                    self.basic_ai_paddle.dy = self.basic_ai_paddle.speed
+                elif self.puck.y < self.basic_ai_paddle.y - self.basic_ai_difficulty * 60: # creates slight reaction delay
+                    self.basic_ai_paddle.dy = -self.basic_ai_paddle.speed
+                else:
+                    self.basic_ai_paddle.dy = 0
+                if self.puck.x > self.basic_ai_paddle.x + self.basic_ai_difficulty * 250: # creates slight reaction delay
+                    self.basic_ai_paddle.dx = self.basic_ai_paddle.speed
+                elif self.puck.x < self.basic_ai_paddle.x - self.basic_ai_difficulty * 250: # creates slight reaction delay
+                    self.basic_ai_paddle.dx = -self.basic_ai_paddle.speed
+                else:
+                    self.basic_ai_paddle.dx = 0
+                self.basic_ai_paddle.update_position()
+
+        elif mode == 'play':
+            # pygame.event.pump()
+            print("PLAY MODE ACTIVE")
+            self.basic_ai_paddle = self.player1_paddle
+            keys = pygame.key.get_pressed()  # Get current key states within the frame
+            self.player1_paddle.dx = self.player1_paddle.speed * (keys[pygame.K_d] - keys[pygame.K_a])
+            self.player1_paddle.dy = self.player1_paddle.speed * (keys[pygame.K_s] - keys[pygame.K_w])
+            self.player1_paddle.update_position()
+
+        ### UPDATE PADDLE MOVEMENT ------- RL AGENT
         if self.rl_ai_paddle:
             if action is not None:
                 # 0 - no movement, 1 - move up, 2 - move down, 3 - move left, 4 - move right, 5 - move up and right, 6 - move up and left, 7 - move down and left, 8 move down and right
@@ -157,8 +168,10 @@ class AirHockeyGame:
             self.puck.reset()  # Reset the puck
             self.tick_count = 0
 
-    def update(self, action = None):
+    def update(self, action = None, mode = None):
         reward = 0  # Initialize reward for this update
+
+        ### UPDATE PADDLE MOVEMENT
         if self.mode == 'pvp':
             # Update game state each frame, handling player input and moving game objects
             keys = pygame.key.get_pressed()  # Get current key states within the frame
@@ -181,12 +194,13 @@ class AirHockeyGame:
             self.player2_paddle.dy = self.player2_paddle.speed * (keys[pygame.K_DOWN] - keys[pygame.K_UP])
             self.player2_paddle.update_position()
         elif self.mode == 'rlve':
-            self.update_rlve(action)
-
+            self.update_rlve(action, mode=mode)
         else:
             # update random ai
             self.update_random()
 
+
+        ### UPDATE PUCK MOVEMENT
         self.puck.move()
         # check for collisions to reset tick count
         if self.mode == 'pvp':
@@ -204,6 +218,8 @@ class AirHockeyGame:
             else:
                 self.tick_count += 1
         elif self.mode == 'rlve':
+            # if self.render_mode == 'human':
+                
             if self.check_paddle_collision(self.basic_ai_paddle):
                 self.tick_count = 0
             elif self.check_paddle_collision(self.rl_ai_paddle):

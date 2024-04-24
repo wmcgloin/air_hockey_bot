@@ -14,3 +14,6 @@ python train.py
 
 
 run test.py to test the model. Modify bottommost lines to modify tester behavior.
+
+
+run play.py to play against the model. Modify bottommost lines to modify model iteration 

@@ -47,7 +47,7 @@ def run_model_in_env(model, env):
 
 
 
-env = AirHockeyEnv(render_mode='human')
+env = AirHockeyEnv(render_mode='human',mode='play')
 ### SINGLE MODEL
 model_path = './checkpoints/policy_net_episode_0.pth'
 while True:

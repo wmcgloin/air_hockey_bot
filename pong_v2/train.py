@@ -104,7 +104,7 @@ def train(cfg):
         #     fourcc = cv2.VideoWriter_fourcc(*'XVID')
         #     video_writer = cv2.VideoWriter(video_filename, fourcc, 30, (640, 480))
         if i1 % 1000 == 0:
-            env.render(mode='human')
+            env.render()
         epsilon = cfg.epsilon_end + (cfg.epsilon_start - cfg.epsilon_end) * \
                   np.exp(-1. * steps_done / cfg.epsilon_decay)
         if random.random() > epsilon:

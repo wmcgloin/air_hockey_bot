@@ -19,7 +19,7 @@ checkpoint_dir = './checkpoints'
 if not os.path.exists(checkpoint_dir):
     os.makedirs(checkpoint_dir)
 
-env = AirHockeyEnv(render_mode='human')
+env = AirHockeyEnv(render_mode='rgb_array')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 ## Real-Time mointoring. Need desktop environment.
@@ -301,7 +301,7 @@ for i_episode in range(NUM_EPISODES):  # Loop over each episode.
     # Realtime logging
     # if verbose:
 
-    if i_episode % 500 == 0:
+    if i_episode % 50 == 0:
         print('Time: %s' % datetime.datetime.now())
 
         print("Episode: ", i_episode, "Total Reward: ", total_reward, "Loss: ", average_loss, "Epsilon: ", epsilon_value)
@@ -309,7 +309,7 @@ for i_episode in range(NUM_EPISODES):  # Loop over each episode.
 
 
 
-    if i_episode % 2500 == 0:
+    if i_episode % 50 == 0:
         print("Saving model")
         checkpoint_path = os.path.join(checkpoint_dir, f'policy_net_episode_{i_episode}.pth')
         torch.save(policy_net.state_dict(), checkpoint_path)

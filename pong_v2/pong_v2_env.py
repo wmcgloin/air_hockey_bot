@@ -9,7 +9,7 @@ import sys
 class PongV2(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self):
+    def __init__(self, mode="train"):
         super(PongV2, self).__init__()
         self.action_space = spaces.Discrete(4)  # Four actions: move left, right, up, down
         # self.observation_space = spaces.Box(low=0, high=1, shape=(6,), dtype=np.float32)
@@ -17,6 +17,7 @@ class PongV2(gym.Env):
         self.observation_space = spaces.Box(low=0, high=1, shape=(8,), dtype=np.float32)
         self.screen = pygame.display.set_mode((640, 480))
         self.clock = pygame.time.Clock()
+        self.mode = mode
         self.reset()
 
     def reset(self):
@@ -34,10 +35,31 @@ class PongV2(gym.Env):
     def step(self, action):
         self._handle_player_action(action)
         self._update_puck()
-        self._ai_move()
+        if self.mode == "train" or self.mode == "test":
+            self._ai_move()
+        elif self.mode == "play":
+            keys = pygame.key.get_pressed()
+            self._player_move(keys)
         reward, done = self._check_goal()
         self._paddle_collision()
         return self._get_obs(), reward, done, {}
+
+    def _player_move(self,keys):
+        # print("MOVING PLAYER")
+        # print(keys[pygame.K_LEFT])
+        pygame.event.pump()
+        if keys[pygame.K_LEFT] and self.ai_paddle_position[0] > 20:
+            self.ai_paddle_position[0] -= 5
+        if keys[pygame.K_RIGHT] and self.ai_paddle_position[0] < 620:
+            self.ai_paddle_position[0] += 5
+        if keys[pygame.K_UP] and self.ai_paddle_position[1] > 20:
+            self.ai_paddle_position[1] -= 5
+        if keys[pygame.K_DOWN] and self.ai_paddle_position[1] < 220:
+            self.ai_paddle_position[1] += 5
+
+        # pygame.draw.rect(self.screen, (255, 255, 255), (*self.ai_paddle_position, 60, 10))
+
+        # self.render()
 
     def _get_obs(self):
         return np.concatenate([self.puck_position, self.puck_velocity, self.player_paddle_position, self.ai_paddle_position])
@@ -55,17 +77,21 @@ class PongV2(gym.Env):
     def _update_puck(self):
         self.puck_position += self.puck_velocity
         # Bounce off walls
-        if self.puck_position[0] <= 0 or self.puck_position[0] >= 640:
+        if self.puck_position[0] <= 20 or self.puck_position[0] >= 620:
             self.puck_velocity[0] *= -1
-        if self.puck_position[1] <= 0 or self.puck_position[1] >= 480:
+        if self.puck_position[1] <= 20 or self.puck_position[1] >= 460:
             self.puck_velocity[1] *= -1
 
     def _paddle_collision(self):
         player_dist = np.linalg.norm(self.puck_position - self.player_paddle_position)
         ai_dist = np.linalg.norm(self.puck_position - self.ai_paddle_position)
-        if player_dist < 50:
+        if player_dist <= 50:
+            overlap = 50 - player_dist
+            self.puck_position += overlap * (self.puck_position - self.player_paddle_position) / player_dist
             self.puck_velocity[1] = -self.puck_velocity[1]
-        if ai_dist < 30:
+        if ai_dist <= 50:
+            overlap = 50 - ai_dist
+            self.puck_position += overlap * (self.puck_position - self.ai_paddle_position) / ai_dist
             self.puck_velocity[1] = -self.puck_velocity[1]
 
     # def _ai_move(self):
@@ -83,9 +109,9 @@ class PongV2(gym.Env):
 
 
         # Conditional deterministic movement towards the puck with a relaxed condition
-        if self.puck_position[0] > self.ai_paddle_position[0] + 30:  # Slightly increased buffer for movement
+        if self.puck_position[0] > self.ai_paddle_position[0] + 40:  # Slightly increased buffer for movement
             self.ai_paddle_position[0] += 3  # Increase the step size for faster catching up
-        elif self.puck_position[0] < self.ai_paddle_position[0] - 30:
+        elif self.puck_position[0] < self.ai_paddle_position[0] - 40:
             self.ai_paddle_position[0] -= 3
 
         # Conditional deterministic movement towards the puck with a relaxed condition
@@ -100,21 +126,24 @@ class PongV2(gym.Env):
         self.ai_paddle_position[1] = np.clip(self.ai_paddle_position[1], 20, 240)
         
     def _check_goal(self):
-        if self.puck_position[1] >= 480:
+        if self.puck_position[1] >= 460:
             self.score_ai += 1
             return -10000, True
-        elif self.puck_position[1] <= 0:
+        elif self.puck_position[1] <= 20:
             self.score_player += 1
             return 10000, True
         return 0, False
 
-    def render(self, mode='human'):
+    def render(self):
         self.screen.fill((0, 0, 0))
-        pygame.draw.circle(self.screen, (255, 0, 0), self.puck_position.astype(int), 15)
-        pygame.draw.rect(self.screen, (0, 0, 255), (*self.player_paddle_position, 60, 10))
-        pygame.draw.rect(self.screen, (255, 255, 255), (*self.ai_paddle_position, 60, 10))
+        pygame.draw.circle(self.screen, (255, 0, 0), self.puck_position.astype(int), 20)
+        pygame.draw.circle(self.screen, (0, 0, 255), self.player_paddle_position.astype(int), 30)
+        pygame.draw.circle(self.screen, (255, 255, 255), self.ai_paddle_position.astype(int), 30)
+        # pygame.draw.rect(self.screen, (0, 0, 255), (*self.player_paddle_position, 60, 10))
+        # pygame.draw.rect(self.screen, (255, 255, 255), (*self.ai_paddle_position, 60, 10))
         pygame.display.flip()
-        self.clock.tick(60)
+        if self.mode=="play" or self.mode=="test":
+            self.clock.tick(300)
 
 
     def close(self):

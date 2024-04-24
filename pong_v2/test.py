@@ -20,7 +20,7 @@ class DQN(nn.Module):
     
 
 def load_model(model_path, outputs=None):
-    env = PongV2()
+    env = PongV2(mode='test')
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = DQN(env.observation_space.shape[0],env.action_space.n).to(device)
     model.load_state_dict(torch.load(model_path))
@@ -50,9 +50,9 @@ def run_model_in_env(model, env):
 
 
 
-env = PongV2()
+env = PongV2(mode='test')
 ### SINGLE MODEL
-model_path = './checkpoints/policy_net_episode_490000.pth'
+model_path = './checkpoints/policy_net_episode_150000.pth'
 while True:
     model = load_model(model_path)
     run_model_in_env(model, env)
