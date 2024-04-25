@@ -8,7 +8,7 @@ from game import AirHockeyGame
 class AirHockeyEnv(gym.Env):
     metadata = {'render_modes': ['human', 'rgb_array'], 'render_fps': 3000}
 
-    def __init__(self, render_mode = None):
+    def __init__(self, render_mode = None, mode="train"):
         super(AirHockeyEnv, self).__init__()
         pygame.init()
         self.render_mode = render_mode
@@ -22,6 +22,7 @@ class AirHockeyEnv(gym.Env):
         self.verbose = False
         self.episode_counter = 0
         self.frame_save_interval = 1000
+        self.mode = mode
 
     def get_state(self):
         # Access the current game state from the AirHockeyGame instance
@@ -41,8 +42,10 @@ class AirHockeyEnv(gym.Env):
 
     # FOR Linear IMPLEMENTATION
     def step(self, action):
-        reward, done, info = self.game.update(action)
+        reward, done, info = self.game.update(action, mode=self.mode)
         obs = self.game.get_state()
+        # if self.mode == "train" or self.mode == "test":
+        #     self.game.ai_move()
         if self.episode_counter % self.frame_save_interval == 0:
             np.save(f'frame_data_episode_{self.episode_counter}.npy', obs)
 
@@ -82,6 +85,8 @@ class AirHockeyEnv(gym.Env):
             self.clock.tick(60)
         else:
             pass
+        
+        
 
     def close(self):
         pygame.quit()
