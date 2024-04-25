@@ -1,0 +1,80 @@
+---
+title: "Robo Rink: Reinforcement Learning Implementation on Custom Air Hockey Game"
+subtitle: "DSAN 6600: Neural Nets and Deep Learning"
+authors: ["Jorge Bris Moreno", "Eric Dapkus", "Brian Kwon", "Kangheng Liu", "Billy McGloin"]
+date: last-modified
+date-format: long
+format:
+  html:
+    self-contained: true
+    toc: true
+    code-overflow: wrap
+    code-fold: true
+---
+
+# Introduction (Brian)
+
+- What is reinforcement learning
+- What the goals of the project are/were
+  - train a model to learn air hockey
+
+# Creating The Game (Brian)
+
+- using pygame to create air hockey
+- puck and paddle class are fed into the game class which controls game logic
+- this then feeds into a main file where you can switch between modes (player v. player, player v. environment, RL v. environment)
+- we created two different simple bots to play and train against (one just went up and down and the other chased the ball around)
+  - while the one that just moved in the y direction is harder to play against, the puck can slow down on that half thus training is quicker and easier against the newer bot
+
+# Wrapping Game in Gym Environment (Kang)
+
+- gym is a toolkit for developing and comparing reinforcement learning algorithms
+- what is the environment structure
+- how is this then used for a RL algorithm
+
+# Model Selection (Jorge)
+
+- initially wanted to do a CNN model that takes downsampled grayscale frames of the game as input -> from 800x400 to 16x8
+- would take in stack of (previous) three frames so that it can detect velocity
+- while this seemed to work, the training was slow so we changed to a linear model
+- the linear model took 8 inputs - x and y for each paddle and the puck (6) and the puck's velocity in the x and y direction (2)
+- this gives the model the exact features we deem important which expedites training (besides just having less input)
+- we had numerous versions of each model (2v3 hidden layers for the linaer model) and then the cnn had different number of linear output layers
+
+# Proof of Concept (Kang)
+
+- created simplified air hockey game - kinda a mesh between air hockey and pong
+- did this directly in a custom gym environment
+- wanted to first test the environment and then train to demonstarte proof of concept
+- short videos to display results
+
+# Training Specs (Eric)
+
+- Google Colab Pro, Intel NUC, Ubunto, etc.
+
+# Training Process (Billy)
+
+- Replay memory
+- policy net
+- target net
+- selecting the action
+- optimize functoin
+- loss function
+
+# Training Results (Eric & Billy)
+
+- how models compared against each other (eric)
+- maybe a plot or two with some descriptions (eric)
+- how did the model perform (eric)
+- include videos at various iterations (billy)
+
+# Human v. RL - billy if accomplished
+
+- this is now a feature we have. billy or eric will train a model to make it super good and then hopefully we will be able to host this
+- if we can, maybe this part just includes a link
+
+# Conclusion (Jorge)
+
+- did we accomplish our goals? what did we learn? 
+- is there anything we think could have been done better?
+- is there anything we would potentially implement in the future?
