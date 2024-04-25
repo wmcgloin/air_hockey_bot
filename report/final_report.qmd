@@ -10,6 +10,7 @@ format:
     toc: true
     code-overflow: wrap
     code-fold: true
+bibliography: ./bib.bib
 ---
 
 # Introduction (Brian)
@@ -50,7 +51,43 @@ format:
 
 # Training Specs (Eric)
 
-- Google Colab Pro, Intel NUC, Ubunto, etc.
+We began training the reinforcement models on our personal laptops. This was sufficient at the beginning when working with the proof of concept and training a reinforcement model to play Pong. We could train the model beyond human performance overnight in 250,000 episodes. When we moved to train models on the Air Hockey personal computers fell short. 
+
+The Air Hockey game is more complex than Pong. The physics of the game are more complex. Computing the new velocity of the puck after contact with a paddel is more complex, making it take longer to render the environment each step. What the model has to learn is also more complex since it has to score on a goal and not an entire side, and the shape of the padsdels adds complexity to how the model should hit the puck. These two facts made training take longer to reach the same results as compared to pong. It became clear during the early training runs that personal laptops were insuffecient to train the reenforment model to play. It was not fessible to keep a laptop running for the time required to train the model while having to use the laptop for other class work so we looked for other options. 
+
+### Google Colab
+
+The first option we looked into was Google Colab Pro, a hosted Jupyter Notebook service that provides access to computing resources [-@colab]. The Pro tier provides access to faster Graphical Processing Units (GPU) and more system memory. We tried training on systems connected to L4 GPU with no additional Random Access Memory (RAM). We used the following code provided by Google to ensure the instance was connected to and using the GPU:
+
+```{{python}}
+gpu_info = !nvidia-smi
+gpu_info = '\n'.join(gpu_info)
+if gpu_info.find('failed') >= 0:
+ print('Not connected to a GPU')
+else:
+ print(gpu_info)
+```
+
+Google Colab has some preinstalled libraries for users, but it laked the gymnasium library our code depended on. After connecting the session to Google Drive we used the following code to navigate to the correct working directory, install the gymnasium library, and run our python script:
+
+```{{python}}
+#set and check working directory
+%cd /content/drive/MyDrive/neural_nets_project/models/cnn
+%pwd
+
+#install required packages fo colab
+!pip install gymnasium
+
+#run code
+!python dqn.py
+```
+We quickly moved away from Colab after we began testing on it. While the model could take advantage of the connected GPU, stepping through the game did not. Stepping through the game was the most signifficant bottleneck to training, so we moved from a paid-for-use solution to something we had on hand. 
+
+### Intel NUCs
+
+We moved training to four Intel Next Unit of Computing (NUC). These are small computers messuring approximatly 4' x 4' x 2.5' and are used in many different usecases from desktopreplacement to edge computing nodes for major corperations like Chick-fil-A [-@Chambers_2023]. Our NUCs are equiped with i5-1135G7, 64GB RAM, and 500GB m.2 sold state drive. They are running Ununtu Server (22.044 LTCS). While there are many solutions to ensure the code ran continuously wee used screen to maintain persistent sessions even after we disconnect from the devices. The network's firewall runs a Virtual Private Network (VPN) service to allow us to remotely manage the servers from anywhere. 
+
+While not as fast as the Google Colab instances, we could leave the systems run for days without interuption, something Colab doesn't support unless paying into a higher teir. The mini PC's each ran a models from Tuesday, April 23rd 2023, through Sunday, April 28th 2024. Three of the NUCs ran a single model the entire time while the fourth swtich models once Wednesday, April 24th 2024. 
 
 # Training Process (Billy)
 
@@ -63,8 +100,115 @@ format:
 
 # Training Results (Eric & Billy)
 
+The majority of compute cycles were spent running five different models. The first four, new_ai, new_ai_750, old_ai, and old_ai_750 were very simular. old_ai and old_ai_750 both use the origonal logically controlled paddel that follows the puck vertically. new_ai and new_ai_750 use a modified loggically controlled paddle that follows the puck in two dimensions. The only other difference betwwen the first four models was the "TARGET_UPDATE" hyper-parameter. new_ai and old_ai had a "TARGET_UPDATE" of 1000 while there 750 counterparts had a "TARGET_UPDATE" of 750.
+
+The fith model, final_run, had reduced logging and saved less checkpoints while running. It ran in a differnt render mode then the other four models and had an additional linear layer in the neural network. Below is the majority of the differnt hyper-parameters for each model. The souce for each model is available at [-@github].
+
+```{{new_ai}}
+env = AirHockeyEnv(render_mode='rgb_array')
+
+# hyperparameters
+BATCH_SIZE = 64 
+GAMMA = 0.99  # Discount factor for future rewards
+EPS_START = 0.95  # Initial epsilon value for epsilon-greedy action selection
+EPS_END = 0.05  # Final epsilon value for epsilon-greedy action selection
+EPS_DECAY = 80000  # Rate at which epsilon decreases
+LR = 1e-4  # Learning rate for the optimizer
+TARGET_UPDATE = 1000  # How often to update the target network
+MEMORY_CAPACITY = 10000  # Capacity of the replay memory
+NUM_EPISODES = 500000  # Number of episodes to train
+
+Linear Layers = 2
+Convolutional Layers = 2
+```
+
+```{{new_ai_750}}
+env = AirHockeyEnv(render_mode='rgb_array')
+
+# hyperparameters
+BATCH_SIZE = 64 
+GAMMA = 0.99  # Discount factor for future rewards
+EPS_START = 0.95  # Initial epsilon value for epsilon-greedy action selection
+EPS_END = 0.05  # Final epsilon value for epsilon-greedy action selection
+EPS_DECAY = 80000  # Rate at which epsilon decreases
+LR = 1e-4  # Learning rate for the optimizer
+TARGET_UPDATE = 750  # How often to update the target network
+MEMORY_CAPACITY = 10000  # Capacity of the replay memory
+NUM_EPISODES = 500000  # Number of episodes to train
+
+Linear Layers = 2
+Convolutional Layers = 2
+```
+
+```{{old_ai}}
+env = AirHockeyEnv(render_mode='rgb_array')
+
+# hyperparameters
+BATCH_SIZE = 64 
+GAMMA = 0.99  # Discount factor for future rewards
+EPS_START = 0.95  # Initial epsilon value for epsilon-greedy action selection
+EPS_END = 0.05  # Final epsilon value for epsilon-greedy action selection
+EPS_DECAY = 80000  # Rate at which epsilon decreases
+LR = 1e-4  # Learning rate for the optimizer
+TARGET_UPDATE = 1000  # How often to update the target network
+MEMORY_CAPACITY = 10000  # Capacity of the replay memory
+NUM_EPISODES = 500000  # Number of episodes to train
+
+Linear Layers = 2
+Convolutional Layers = 2
+```
+
+```{{old_ai_750}}
+env = AirHockeyEnv(render_mode='rgb_array')
+
+# hyperparameters
+BATCH_SIZE = 64 
+GAMMA = 0.99  # Discount factor for future rewards
+EPS_START = 0.95  # Initial epsilon value for epsilon-greedy action selection
+EPS_END = 0.05  # Final epsilon value for epsilon-greedy action selection
+EPS_DECAY = 80000  # Rate at which epsilon decreases
+LR = 1e-4  # Learning rate for the optimizer
+TARGET_UPDATE = 750  # How often to update the target network
+MEMORY_CAPACITY = 10000  # Capacity of the replay memory
+NUM_EPISODES = 500000  # Number of episodes to train
+
+Linear Layers = 2
+Convolutional Layers = 2
+```
+
+```{{final_run}}
+env = AirHockeyEnv(render_mode='human')
+# hyperparameters
+BATCH_SIZE = 64 
+GAMMA = 0.99  # Discount factor for future rewards
+EPS_START = 0.95  # Initial epsilon value for epsilon-greedy action selection
+EPS_END = 0.05  # Final epsilon value for epsilon-greedy action selection
+EPS_DECAY = 606060  # Rate at which epsilon decreases
+LR = 1e-4  # Learning rate for the optimizer
+TARGET_UPDATE = 800  # How often to update the target network
+MEMORY_CAPACITY = 12000  # Capacity of the replay memory
+NUM_EPISODES = 2500000  # Number of episodes to train
+
+Linear Layers = 3
+Convolutional Layers = 0
+```
+
+
+
+
+
 - how models compared against each other (eric)
 - maybe a plot or two with some descriptions (eric)
+  
+  The histogram below shows how the models did over he sum of their training. The Left  bin shows when the model achieved a negitive reward indicating the model lost the episode. The center bin shows when the reward was near zero indicating no clear winner for the episode. The right bin shows when the reward was near 10 indicating the times the model won the episode. 
+
+  ![Histogram showing rewards per model](bin.png)
+
+
+  The line plot below shows the running sum of rewards for each model. The line trending down shows times the model lost more episodes than it won. The line trending upwards shows times the model won more often then the loggically controlled bot opponent.
+
+  ![Line plot showing the running sum of rewards](line.png)
+  
 - how did the model perform (eric)
 - include videos at various iterations (billy)
 
