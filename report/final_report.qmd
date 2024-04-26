@@ -34,12 +34,53 @@ format:
 
 # Model Selection (Jorge)
 
-- initially wanted to do a CNN model that takes downsampled grayscale frames of the game as input -> from 800x400 to 16x8
-- would take in stack of (previous) three frames so that it can detect velocity
-- while this seemed to work, the training was slow so we changed to a linear model
-- the linear model took 8 inputs - x and y for each paddle and the puck (6) and the puck's velocity in the x and y direction (2)
-- this gives the model the exact features we deem important which expedites training (besides just having less input)
-- we had numerous versions of each model (2v3 hidden layers for the linaer model) and then the cnn had different number of linear output layers
+### DQN
+The choice of models for a project like this can vary. However, due to the simple game model generated, we will be using the DQN algorithm as we believe is a sufficiently strong neural network class for our case and it will allow us to experiment with different architectures. The DQN class is a form of Reinforcement Learning that utilizes neural networks to approximate the Q-function which traditionally is a table that holds Q-values for every state and action pairs. These values represent the quality of taking a specific step, and normally the step taking will be determined by the best value.
+
+### Convolutional Architecture
+Due to the screen size and the main objective of the game (move the paddle to hit the puck and score a goal), we first decide to experiment with a convolutional neural network that would take 3 frames at a time. The intended goal was for it to identify the location of paddles and the puck and identify the speed and angles from those three frames. The frames fed into the model where in grayscale (as color does not matter for this game) and it had the following architecture:
+
+- First Convolutional Layer: This layer has 16 filters (or neurons), a kernel size of 3, a stride of 1, and padding of 1. It applies a convolution operation to the input data.
+- First Batch Normalization Layer (bn1): After the first convolutional layer, there's a batch normalization layer with 16 features. The batch normalization is used to stabilize the learning process and dramatically reduce the number of training epochs required.
+- First Pooling Layer: This is an average pooling layer with a window of 2, which reduces the spatial dimensions (height and width) of the output from the previous batch normalization layer.
+- Second Convolutional Layer: This layer doubles the number of filters to 32, with the same kernel size, stride, and padding as the first convolutional layer.
+- Second Batch Normalization Layer: This layer normalizes the output of the second convolutional layer, also with 32 features.
+- Second Pooling Layer: Another average pooling layer with a window of 2 follows, further reducing the dimensions of the data.
+- Flattening: Before passing the data to the fully connected layer, the multi-dimensional output from the pooling layers must be flattened into a single vector.
+- Fully Connected Layer: This is the output layer. It maps the flattened features from the convolutional layers to the final output. The number of outputs corresponds to the number of possible actions (9) in the environment the DQN is interacting with, providing the Q-values for each action.
+
+The activation functions utilized were ReLU and the possible actions are the following: 0: Do nothing, 1: Move up, 2: Move down, 3: Move left, 4: Move right, 5: Move up and left, 6: Move up and right, 7: Move down and left, 8: Move down and right.
+
+After training this model, we realized that the model was taking too long to “train” and that the performance was not optimal. This could be due to the hyperparameters chosen such as the number of frames fed at a time, or other parameters in the architecture. Due to an effort find a better model, we decided to change our strategy as you can see below.
+
+### Linear Architecture:
+This second model tried to speed the training process and obtain a better performance of the Reinforcement Learning. To do so, we decided to train a Linear Neural Network that will take the information necessary for the algorithm to take the best actions. The model takes 8 inputs, x and y coordinates for the positioning of both paddles and puck (6 inputs), the velocity of the puck, and the direction of the puck. This would give the model the necessary information to make the right movements. We experimented with a simpler and a deeper model. The simpler one had two hidden layers and the deeper one had 3. The architecture of the deeper model is the following:
+
+- First Hidden Layer (linear): Fully connected (dense) layer with 16 neurons.
+- Second Hidden Layer (linear): Fully connected layer follows with 32 neurons.
+- Third Hidden Layer (linear): This layer has 16 neurons.
+- Output Layer (head): The number of outputs corresponds to the number of possible actions (9) in the environment the DQN is interacting with, providing the Q-values for each action.
+
+The activation functions utilized were ReLU and the possible actions are the same as the previous model.
+
+This architecture clearly outperformed the previous one. It does not only perform better but trains much faster. This is probably due to the specific selection of inputs given and the simple structure, which is able to receive and process all the necessary information efficiently. However, we decided to try one more model to see if we can obtain even a better algorithm using a different architecture.
+
+### Convolutional & Linear Architecture
+This architecture tried to combine convolutional layers to feed data into linear layers. It is a common practice as it is able to process frames, obtain all the relevant information from them, and learn any information from that information throughout the linear layers. However, due to our computational and time limitations, we had to simplify this architecture to the following:
+
+- First Convolutional Layer: This layer has 16 filters with a kernel size of 4 and a stride of 1. It is followed by batch normalization.
+- Second Convolutional Layer: Follows the first convolutional layer, with 32 filters, a kernel size of 4, and a stride of 1, also followed by batch normalization.
+- Flattening: Before passing the data to the fully connected layer, the multi-dimensional output from the convolutional layers must be flattened into a single vector.
+- Linear Layer: This is a linear layer that has an input dimension equal to the flattened output of the convolutional layers and an output dimension of 18.
+- Output Layer: This is the final linear layer that maps the 18 features from the previous linear layer to the outputs dimension (9).
+
+Again, we used ReLU as the activation function and the same possible actions as the previous models.
+
+While we would have liked to make this architecture more complex and, for that reason, seems to be underperforming, this is something that can be explored in the future.
+
+### Future model exploration
+In future exploration, different hyperparameters, reward composition, or architectures could be explored in order to train a better model. Furthermore, while DQN seems to work well for our purpose, some other algorithms may be explored in order to compare different behaviors and performances among the models.
+
 
 # Proof of Concept (Kang)
 
@@ -75,6 +116,6 @@ format:
 
 # Conclusion (Jorge)
 
-- did we accomplish our goals? what did we learn? 
-- is there anything we think could have been done better?
-- is there anything we would potentially implement in the future?
+This project presented challenges. Having incorporated mechanics and certain “realistic” features such as change of angles and speeds of the puck due to the nature of the shape and movement of the paddles, we had to take into account more variables than we previously did at the beginning. However, we have found models that really approximate how a “human” would actually play the game, making the playing against the train model very realistic. This was our original goal and we strongly believe that we have succeeded.
+
+On the other hand, in order to improve our bot and make it a better performer, further exploration into different network classes, architectures, and other hyperparameters should be performed. While we were limited due to our computational abilities, after learning how the model works, different architectures impact the bot capabilities, and how different hyperparameter selection affects the training, we could explore different selections in a more targeted format. This is something that we may explore further in the future.
