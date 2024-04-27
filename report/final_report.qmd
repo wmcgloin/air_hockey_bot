@@ -14,17 +14,11 @@ format:
 
 # Introduction (Brian)
 
-- What is reinforcement learning
-- What the goals of the project are/were
-  - train a model to learn air hockey
+Reinforcement learning is a third paradigm of a machine learning along with supervised and unsupervised learning. In reinforcement learning, an agent is trained to maximize the long-term rewards. This agent interacts with an environment by taking an action based on the policy, receives a reward, and updates its policy. The agent continues this cycle to maximize the rewards until it reaches a goal. This project is using RL to train a model to learn how to play our custom air hockey game, and eventually we can play against. The model, or an agent specifically in RL, are trained through Deep Q-learning. 
 
 # Creating The Game (Brian)
 
-- using pygame to create air hockey
-- puck and paddle class are fed into the game class which controls game logic
-- this then feeds into a main file where you can switch between modes (player v. player, player v. environment, RL v. environment)
-- we created two different simple bots to play and train against (one just went up and down and the other chased the ball around)
-  - while the one that just moved in the y direction is harder to play against, the puck can slow down on that half thus training is quicker and easier against the newer bot
+We used Pygame to create our custom air hockey game. The `puck.py` and `paddle.py` files are the backbones of the game. They handle the basics of the game machanics, such as initializing puck and paddles, movement, and drawing them on Pygame screen. These two files are fed into `game.py` file. The `game.py` file controls the game logic, such as scoring and resetting the game when needed. The important part of the game is that it takes differents modes. It can take "pvp" (player v. player) if you want to play with somebody else, "pve" (player v. environment) when you are playing against the bot, and "rlve" which is reinforcement learning model versus environment. For the environment, we created two different simple bots to play and train against. One moves only up and down and the other only chases the ball. These two bots are used to train our RL agent. The `main.py` file wraps `game.py` with Pygame so that we can play our custom game using Pygame. Then we have `air_hock_env.py` and `dqn.py` files. Creating environment is a crucial part of our project as we are using Gynasium to train our RL model. The `air_hock_env.py` file connects our game with Gymnasium by creating custom environment wrapping the 4 main methods (reset, step, render, close). Using this custom envrionment, we train our RL agent in `dqn.py` file using Deep Q-Networks. 
 
 # Wrapping Game in Gym Environment (Kang)
 
