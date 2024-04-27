@@ -63,9 +63,9 @@ class AirHockeyGame:
 
     def setup_rlve(self):
         # Set up the game for reinforcement learning vs environment mode
-        self.basic_ai_paddle = self.player1_paddle
+        self.basic_ai_paddle = self.player2_paddle
         self.basic_ai_difficulty = 0.5
-        self.rl_ai_paddle = self.player2_paddle
+        self.rl_ai_paddle = self.player1_paddle
 
     def setup_random(self):
         # Set up the game for random movement vs environment mode
@@ -261,12 +261,14 @@ class AirHockeyGame:
         # # winning/losing
         if self.game_over:
             if self.winner == "Player 1":
-                reward -= 10  # penalty for losing
+                reward += 10  # penalty for losing
             elif self.winner == "Player 2":
-                reward += 10  # reward for winning
+                reward -= 10  # reward for winning
+        if self.tick_count >= 299:
+            reward -= -2.5
         # puck collision with paddles
         if self.rl_ai_paddle and self.check_paddle_collision(self.rl_ai_paddle):
-            reward += 0.25  # Reward for paddle2 (rl_ai_paddle) coming into contact with the puck
+            reward += 0.5  # Reward for paddle2 (rl_ai_paddle) coming into contact with the puck
         return reward  
 
     def check_paddle_collision(self, paddle):

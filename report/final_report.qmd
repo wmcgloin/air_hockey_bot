@@ -28,6 +28,8 @@ format:
 
 # Wrapping Game in Gym Environment (Kang)
 
+In our endeavor to develop and evaluate various reinforcement learning algorithms for air hockey, we encapsulated our game within the Gymnasium framework. Gymnasium provides a standardized API for reinforcement learning tasks, making it an ideal toolkit for our project. This section details how we adapted our air hockey game to function within this environment, enabling systematic training and evaluation of our models.
+
 - gym is a toolkit for developing and comparing reinforcement learning algorithms
 - what is the environment structure
 - how is this then used for a RL algorithm
@@ -70,8 +72,11 @@ format:
 
 # Human v. RL - billy if accomplished
 
-- this is now a feature we have. billy or eric will train a model to make it super good and then hopefully we will be able to host this
-- if we can, maybe this part just includes a link
+In the ultimate test of our project's success, we have introduced a new mode for our game: Human v. RL. Players can now directly challenge the AI model trained through our reinforcement learning methods. By pitting human intuition and skill against the strategic prowess of our AI, we not only observe but actively engage with the fruits of our labor in real-time.
+
+This game mode was designed to be engaging and fun, offering a unique opportunity for players to test their skills against a non-human opponent. The AI, powered by the best-performing models from our training sessions, provides a challenging adversary capable of adapting to and countering human tactics.
+
+We'll continue to update the model as it learns, but for now, click [here](https://www.youtube.com/watch?v=dQw4w9WgXcQ) to see if you can outplay our AI in an air hockey match. Let the games begin!
 
 # Conclusion (Jorge)
 
