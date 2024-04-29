@@ -139,11 +139,11 @@ This configuration highlights the tailored approaches we experimented with to op
 
 The histogram below illustrates our models' performance throughout their training sessions. The leftmost bin displays instances where the model received a negative reward, indicating losses by the RL agent. The central bin, showing near-zero rewards, indicates instances where neither the agent nor its opponent emerged as a clear winner. The rightmost bin, where the rewards are near 10, marks the occasions where the model successfully won the air hockey games.
 
- ![Histogram showing rewards per model](bin.png)
+![Histogram showing rewards per model](bin.png)
 
 The line plot below tracks the cumulative rewards for each model over time. A downward trend indicates periods when the model consistently lost more games than it won. Conversely, an upward trend signifies phases where the model frequently outperformed the pre-programmed bot opponent.
 
- ![Line plot showing the running sum of rewards](line.png)
+![Line plot showing the running sum of rewards](line.png)
 
 Below, explore the progression of our reinforcement learning model as it learns to play air hockey. This video showcases training checkpoints every 25k episodes, arranged from 0 in the top left to 275k in the bottom right, descending column-wise. This video effectively demonstrates the model's evolving capabilities throughout its training. Note: the RL model controls the right paddle for each game.
 
