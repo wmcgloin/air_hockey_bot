@@ -46,8 +46,8 @@ class AirHockeyEnv(gym.Env):
         obs = self.game.get_state()
         # if self.mode == "train" or self.mode == "test":
         #     self.game.ai_move()
-        if self.episode_counter % self.frame_save_interval == 0:
-            np.save(f'frame_data_episode_{self.episode_counter}.npy', obs)
+        # if self.episode_counter % self.frame_save_interval == 0:
+        #     np.save(f'frame_data_episode_{self.episode_counter}.npy', obs)
 
         # self.render()
         return obs, reward, done, {'truncated': False}, info

@@ -26,7 +26,7 @@ class Puck:
     def launch_puck(self):
         # Randomly set the initial direction and speed of the puck
         angle = random.uniform(0, 2 * math.pi)  # Choose a random angle in radians
-        initial_speed = 12  # Set a constant initial speed
+        initial_speed = 10  # Set a constant initial speed
         self.dx = initial_speed * math.cos(angle)  # Horizontal component of the speed
         self.dy = initial_speed * math.sin(angle)  # Vertical component of the speed
 

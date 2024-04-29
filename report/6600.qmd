@@ -1,0 +1,178 @@
+---
+title: "Robo Rink: Reinforcement Learning Implementation on Custom Air Hockey Game"
+subtitle: "DSAN 6600: Neural Nets and Deep Learning"
+authors: ["Jorge Bris Moreno", "Eric Dapkus", "Brian Kwon", "Kangheng Liu", "Billy McGloin"]
+date: last-modified
+date-format: long
+format:
+  html:
+    self-contained: true
+    toc: true
+    code-overflow: wrap
+    code-fold: true
+bibliography: ./bib.bib
+---
+
+# Introduction
+
+In our project, we embarked on the challenging, yet intriguing task of employing reinforcement learning (RL) to master the game of air hockey. Reinforcement learning, the third paradigm of machine learning, empowers an agent to optimize actions through systematic trial-and-error, guided by rewards for successes and penalties for errors. Our primary aim was to develop an RL agent proficient in the fundamental dynamics of air hockey, capable of refining its strategies to consistently outperform human opponents. To achieve this, we meticulously crafted a faithful simulation of the game, continuously honing our models and strategies through iterative learning and performance assessments. We aimed to cultivate a reinforcement learning agent that could engage in realistic and competitive gameplay, providing a solid groundwork for future explorations and advancements.
+
+# Creating The Game
+
+Creating a realistic and functional simulation of air hockey was a crucial step in accomplishing our goal of training a reinforcement learning model. We utilized Pygame, a robust library in Python designed for writing video games that provided the tools necessary to create our game. The game architecture is centered around two main classes, Puck and Paddle, which interact within our overarching Game class, which orchestrates the core mechanics, such as game scoring, collision dynamics, and paddle control. Furthermore, the game was designed to support several modes:
+
+- Player vs. Player: Allowing two human players to compete against one another enables us to test the game mechanics and basic strategies.
+- Player vs. Environment: In this mode, a human player competes against a computer-controlled opponent (bot), facilitating a controlled environment for training and testing and making our game single-player.
+- RL vs. Environment: Here, our reinforcement learning model controls the actions of the paddle that the human previously controlled, competing and learning against the programmed bot.
+
+To simulate diverse and challenging scenarios, we crafted two distinct types of bots for the AI to train against: a bot that moves predictably in a vertical motion and another that actively chases the puck around the playing field. The first type presents a strategic challenge due to predictable, yet effective movements, while the second type offers dynamic and unpredictable gameplay, crucial for enhancing the AI’s adaptive strategies. This setup not only accelerates the agent's learning curve, but also enriches the training process with varied gameplay experiences, preparing the RL agent for real-world scenarios and complex decision-making processes.
+
+# Wrapping The Game in a Gym Environment
+
+In our endeavor to develop and evaluate various reinforcement learning algorithms for air hockey, we encapsulated our game within the Gymnasium framework. Gymnasium provides a standardized API for reinforcement learning tasks, making it an ideal toolkit for our project. This section details how we adapted our air hockey game to function within this environment, enabling systematic training and evaluation of our models.
+
+## Environment Structure
+The Gym environment for our air hockey game is structured to encapsulate all the dynamics and rules of the game. At each timestep, the environment accepts an action from the agent (a specific paddle movement direction or no movement) and updates the game state accordingly. The state includes the positions and velocities of the puck and paddles, which are relayed back to the agent as observations. Rewards are calculated based on the game outcomes—such as scoring a goal or colliding with the puck—providing immediate feedback to the agent about the effectiveness of its actions.
+
+By wrapping our game in the Gymnasium environment, we've established a robust platform for conducting rigorous and reproducible reinforcement learning experiments, essential for advancing our project's goals of developing an AI capable of mastering air hockey.
+
+## Customization of the Gym Interface
+To integrate our game with the Gym framework, we defined several key functions:
+
+- reset(): Initializes or resets the game state at the start of an episode. This function is crucial for starting new training sessions and is automatically called after each game.
+- step(action): Advances the game by one timestep. It executes an action selected by the agent, updates the game state, and returns the new state, the reward for the action taken, and a boolean value that indicates whether the episode has ended (e.g., if a goal is scored).
+- render(): Provides a visual representation of the game state, which is invaluable for debugging and visually tracking the agent's performance during training.
+- close(): Properly shuts down the environment when it is no longer needed, ensuring that resources are cleanly released.
+
+# Model Selection
+
+For our project, selecting an appropriate model is crucial due to the game's dynamic nature. We have opted to use the Deep Q-Network (DQN) algorithm, a sophisticated form of reinforcement learning that employs neural networks to approximate the Q-function. Traditionally, this function represents the expected rewards for taking certain actions in given states and is stored in a vast table. DQN allows us to handle this function as a neural network model, efficiently managing the high-dimensional spaces by indirectly learning optimal policies. This capability is essential for experimenting with different architectures and optimizing our model's performance in the complex environment of air hockey.
+
+Our initial approach in this project involved utilizing a Convolutional Neural Network (CNN) to process downsampled grayscale frames of the air hockey game. This model ingested frames resized from the original 800x400 to a more computationally manageable 16x8 resolution. By stacking three consecutive frames, the CNN was designed to capture not only the static elements of each frame, but also the dynamics of movement, such as the velocity and trajectory of the puck.
+
+Despite the theoretical advantages of using CNNs for spatial data recognition, we observed substantial training delays and less-than-optimal performance during preliminary tests. The complexity of processing sequential frames and extracting useful features through convolutional layers led to significant computational overhead, prompting us to reconsider our model choice.
+
+Transitioning to a linear architecture, we implemented a Linear Neural Network that directly processes eight essential inputs. These inputs include the x and y coordinates of both paddles and the puck, along with the puck's velocity in the x and y directions. This direct approach allows the model to focus exclusively on the fundamental features that influence gameplay decisions, thereby streamlining the learning process.
+
+The linear model showed a substantial improvement in training speed and efficiency. We experimented with different configurations of this model, adjusting the number of hidden layers to balance complexity and performance. The simpler versions with fewer layers offered rapid training times, while slightly deeper models provided a modest increase in decision quality without reverting to the computational intensity of the CNN.
+
+Our experience underscores the importance of selecting the right model architecture based on the environment's specific requirements and constraints. By shifting from a CNN to a more straightforward linear model, we achieved better performance and more efficient training, confirming the practical benefits of this adaptive approach to model selection.
+
+# Proof of Concept
+
+To demonstrate the feasibility of our air hockey game as a suitable platform for reinforcement learning applications, we initially created a simplified version of the game, blending elements of traditional air hockey and pong. This prototype was developed directly within a custom Gym environment, allowing us to seamlessly integrate reinforcement learning methodologies into the gameplay.
+
+Our first step was to test the game's basic mechanics in this simplified environment to ensure that all interactions between the puck and paddles behaved as expected. This stage was critical to confirm that our game could accurately simulate the dynamics of air hockey, even in a stripped-down format.
+
+Once we validated basic game mechanics, we then trained a Deep Q-Network (DQN) to learn optimal play within this environment. The simplified game format reduced complexity and allowed us to focus on fine-tuning the learning processes without the overhead of more complex game dynamics. This approach helped us to isolate and address potential issues early in the development phase.
+
+To visually demonstrate the success of our proof of concept, we captured short videos showing the progression of the agent as it learned over time (these videos are sped up). The first video below shows that the agent (blue) is losing almost every game as it has yet to understand its environment.
+
+{{< video https://youtu.be/s6R40vHmmbQ >}}
+
+After around fifty thousand episodes, we can see that the agent has learned to move side-to-side and is now returning the puck. 
+
+{{< video https://youtu.be/IRs8wpfo7gA >}}
+
+Finally, after a couple hundred thousand episodes, the agent becomes an unstoppable force, able to anticipate the puck's trajectory and develop offensive and defensive maneuvers. 
+
+{{< video https://youtu.be/VtGmM2J8E5c >}}
+
+The proof-of-concept phase was invaluable in establishing the viability of our approach. It allowed us to refine the integration of the DQN algorithm within our game mechanics and informed further improvements to both game design and RL algorithms. 
+
+# Training
+
+## Training Specifications
+
+We initially used personal laptops for training, which were sufficient for early experiments and our proof of concept in training a model to play Pong. These setups allowed the model to surpass human performance within hours as the agent completed roughly 1,000,000 episodes. However, as we progressed to the more complex and demanding Air Hockey environment, the intricate game physics and strategic demands quickly demonstrated that our laptops, with their limited processing power, were insufficient. The increased complexity necessitated a shift to more powerful computing solutions to efficiently manage the advanced training requirements.
+
+### Google Colab
+
+We initially explored using Google Colab Pro, a hosted Jupyter Notebook service that offers access to more robust computing resources [-@colab] such as faster GPUs and increased system memory. After installing the necessary libraries and connecting to Google Drive for our project files, we found that while the GPU accelerated parts of our model training, it did not improve the speed of stepping through the game simulations, which was the primary bottleneck in our training process. Consequently, we decided to shift away from this paid solution to explore more effective options already available to us.
+
+### Intel NUCs
+
+We moved training to four Intel Next Unit of Computing (NUC). These are small computers measuring approximately 4' x 4' x 2.5' and are used in many different use cases, from desktop replacement to edge computing nodes for major corporations like Chick-fil-A [-@Chambers_2023]. Our NUCs are equipped with i5-1135G7, 64GB RAM, and 500GB m.2 solid state drive. They are running Ubuntu Server (22.044 LTCS). While there are many solutions to ensure the code runs continuously, we used screen to maintain persistent sessions even after we disconnected from the devices. The network's firewall runs a Virtual Private Network (VPN) service to allow us to manage the servers remotely. 
+
+While not as fast as the Google Colab instances, we could leave the systems running for days without interruption, something Colab doesn't support unless paying into a higher tier. The mini PC's each ran models from Tuesday, April 23rd, 2023, through Sunday, April 28th, 2024. Three of the NUCs ran a single model the entire time, while the fourth switched models once on Wednesday, April 24th, 2024. 
+
+## Training Process
+
+In any reinforcement learning project, the training process is crucial for enhancing the AI's decision-making capabilities. Our training involves managing a combination of replay memory, dual neural networks, and an action-selection mechanism designed to optimize the agent's learning path. Each component is vital in developing an effective and efficient learning system.
+
+We utilize replay memory to store transitions observed at each timestep from which the agent samples. This process helps the agent learn from diverse experiences and avoid the pitfalls of correlated data and non-stationary distributions, enhancing the stability of the training process.
+
+The core of our training architecture includes two neural networks. The policy network directly influences the agent's decision-making by predicting the optimal actions from the current state and is continuously updated in every batch. We also employ a target network to stabilize updates—a slightly outdated copy of the policy network that provides consistent learning targets. This separation helps smooth out the training updates and reduce oscillations in the learning process.
+
+Actions are chosen using an ε-greedy strategy, where the AI predominantly chooses the best action as suggested by the policy network but occasionally selects randomly to explore new strategies. While the proportion of random actions is high initially, it decreases as time progresses. This ensures that the AI does not become trapped in local optima and continues to discover new—potentially superior—strategies. 
+
+We optimize the policy network by adjusting its parameters to minimize the value of the Huber loss between the predicted Q-values and the Q-values estimated by the target network. This optimization, performed using the gradients of the loss function, is specifically designed to measure how well the network predicts the expected future rewards while being more robust to outliers than traditional mean squared error loss.
+
+By integrating these elements, our training process accelerates the agent's learning efficiency and ensures robustness and adaptability in its gameplay strategy. This approach allows the agent to continuously evolve and adapt to the competitive dynamics of air hockey.
+
+## Running our Models
+
+We allocated the majority of our compute cycles to running five different models, each tailored with specific opponent mechanisms and hyperparameters. The models new_ai and old_ai, along with their variants new_ai_750 and old_ai_750, share a common base but differ in their opponent paddle control logic and the TARGET_UPDATE hyperparameter setting. Specifically, old_ai and old_ai_750 face an opponent that only moves vertically to follow the puck, while new_ai and new_ai_750 feature an opponent that moves in two dimensions. The TARGET_UPDATE is set at 1000 for new_ai and old_ai, and at 750 for their respective 750 variants, reflecting how frequently the target network updates.
+The fifth model, final_run, was designed with minimal logging and checkpoint saving to optimize performance. Unlike the other four, final_run operates in a different render mode and incorporates an additional linear layer in its neural network architecture. This model represents a more streamlined approach with a unique set of hyperparameters including a distinctive epsilon decay rate and increased training episodes.
+
+Below are the key differences in hyperparameters among the models:
+
+Common Hyperparameters:
+
+- BATCH_SIZE: 64
+- GAMMA (Discount factor for future rewards): 0.99
+- EPS_START (Initial epsilon value for epsilon-greedy action selection): 0.95
+- EPS_END (Final epsilon value): 0.05
+- LR (Learning rate): 1e-4
+- MEMORY_CAPACITY: 10000 (12000 for final_run)
+
+Model-Specific Hyperparameters:
+
+- TARGET_UPDATE: Varies between 750 and 1000, except for final_run, which is 800.
+- EPS_DECAY: 80000 for all except final_run, which is 606060.
+- NUM_EPISODES: 500000 for all except final_run, which is 2500000.
+- Linear Layers: 2 for the first four models, 3 for final_run.
+
+This configuration highlights the tailored approaches we experimented with to optimize each model's performance and learning efficacy. Our project's GitHub repository (link at bottom of report) contains detailed source code and further model-specific settings.
+
+## Training Results
+
+The histogram below illustrates our models' performance throughout their training sessions. The leftmost bin displays instances where the model received a negative reward, indicating losses by the RL agent. The central bin, showing near-zero rewards, indicates instances where neither the agent nor its opponent emerged as a clear winner. The rightmost bin, where the rewards are near 10, marks the occasions where the model successfully won the air hockey games.
+
+ ![Histogram showing rewards per model](bin.png)
+
+The line plot below tracks the cumulative rewards for each model over time. A downward trend indicates periods when the model consistently lost more games than it won. Conversely, an upward trend signifies phases where the model frequently outperformed the pre-programmed bot opponent.
+
+ ![Line plot showing the running sum of rewards](line.png)
+
+Below, explore the progression of our reinforcement learning model as it learns to play air hockey. This video showcases training checkpoints every 25k episodes, arranged from 0 in the top left to 275k in the bottom right, descending column-wise. This video effectively demonstrates the model's evolving capabilities throughout its training. Note: the RL model controls the right paddle for each game.
+
+{{< video https://www.youtube.com/watch?v=ZXFx_aBvc80 >}}
+
+Continuously visualizing model performance allowed us to learn that in some instances, the RL algorithm appears to disrupt the game's physics. Moreover, the model initially learns to manipulate the puck by hitting it backwards against its own wall, leveraging rebounds to score. This unconventional strategy precedes mastering simpler tasks such as straightforward puck hits, presenting a fascinating aspect of the learning process.
+
+# Human v. RL
+
+In the ultimate test of our project's success, we have introduced a new mode for our game: Human v. RL. Players can now directly challenge the AI model trained through our reinforcement learning methods. By pitting human intuition and skill against the strategic prowess of our AI, we not only observe but actively engage with the fruits of our labor in real-time.
+
+This game mode was designed to be engaging and fun, offering a unique opportunity for players to test their skills against a non-human opponent. The AI, powered by the best-performing models from our training sessions, provides a challenging adversary capable of adapting to and countering human tactics.
+
+We'll continue to update the model as it learns, but for now, click [here](https://www.youtube.com/watch?v=dQw4w9WgXcQ) to see if you can outplay our AI in an air hockey match. Let the games begin!
+
+# Conclusion
+
+Throughout our project, we successfully tackled the challenging task of training a model to play air hockey—an endeavor that required intricate modeling, rigorous training, and a creative approach. We set out to construct a reinforcement learning agent that could approximate human-like gameplay, and our results have compellingly demonstrated that we have met this goal. The agent's ability to engage in realistic gameplay is a testament to the effectiveness of our chosen strategies and models.
+
+This journey was not without its challenges. The introduction of realistic game dynamics, such as varying puck speeds and angles due to the paddle movements, required us to adapt and consider a broader range of variables than initially anticipated. These complexities pushed us to continuously refine our models and deepen our understanding of the game mechanics as they interact with RL strategies.
+
+We found that while our linear models performed well, they represent just a starting point. Exploring different network architectures, classes, and more nuanced hyperparameter tuning opens numerous possibilities for enhancing performance. Although our computational resources were a limiting factor for this project, the insights gained provide a clear pathway for future projects. We plan to explore these possibilities as we extend our capabilities, aiming to develop an even more sophisticated AI opponent.
+
+As we reflect on our project, it's clear that our achievements align closely with our initial objectives. We have not only developed an AI capable of playing air hockey but also established a solid framework for further research and development. The lessons learned about the interplay between game dynamics and AI behavior, the impacts of network architecture on performance, and the critical role of continuous testing and adaptation are invaluable.
+
+In future iterations, we aim to integrate more complex neural network architectures and test new learning paradigms that could push the boundaries of what our agent can achieve. The potential to expand this project into areas such as real-time adaptive learning and multi-agent learning environments is particularly exciting.
+
+Our project has laid the groundwork for these future explorations while providing a robust model that offers both a challenging opponent and a platform for further research and development.
+
+# Link to Github Repo
+
+[Here is a link to the github repo for our porject.](https://github.com/wmcgloin/neural_nets_project.git)
