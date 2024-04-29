@@ -7,7 +7,7 @@
 
 ## Installation
 
-The AI is trained on our environment. To play against it, you need to follow the instructions below.
+The AI is pre-trained on our environment. To play against a saved model, you need to follow the instructions below.
 
 
 ### *NIX OSs (Linux, MacOS, etc.)
