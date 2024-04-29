@@ -29,9 +29,8 @@ fi
 conda create -y -n $ENV_NAME python=3.9
 conda activate $ENV_NAME
 
-cd play
 # Install Python dependencies
-pip install -r requirements.txt
+pip install -r play/requirements.txt
 
 # Run the application
-python play.py
+python play/play.py
