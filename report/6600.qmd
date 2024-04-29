@@ -157,7 +157,7 @@ In the ultimate test of our project's success, we have introduced a new mode for
 
 This game mode was designed to be engaging and fun, offering a unique opportunity for players to test their skills against a non-human opponent. The AI, powered by the best-performing models from our training sessions, provides a challenging adversary capable of adapting to and countering human tactics.
 
-We'll continue to update the model as it learns, but for now, click [here](https://www.youtube.com/watch?v=dQw4w9WgXcQ) to see if you can outplay our AI in an air hockey match. Let the games begin!
+We'll continue to update the model as it learns, but for now, click [here](https://github.com/wmcgloin/air_hockey_bot/tree/main/play) to see if you can outplay our AI in an air hockey match. Let the games begin!
 
 # Conclusion
 
