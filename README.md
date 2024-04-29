@@ -13,3 +13,5 @@ The speed multiplier folder contains alternate versions of the training process 
 The browser folder was a failed attempt to create a web-based version of the game. It is currently not functional.
 
 Our presentation is in the presentation folder and report in the report folder.
+
+The play folder contains a version of the AI that can be played against in the air hockey game.
