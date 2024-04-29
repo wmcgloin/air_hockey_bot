@@ -15,5 +15,5 @@ The AI is trained on our environment. To play against it, you need to follow the
 One liner(Recommended):
 
 ```bash
-curl -sL https://raw.githubusercontent.com/wmcgloin/air_hockey_bot/master/setup_and_run.sh | bash
+curl -sL https://raw.githubusercontent.com/wmcgloin/air_hockey_bot/main/play/start_play.sh | bash
 ```
