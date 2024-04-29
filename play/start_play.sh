@@ -30,7 +30,9 @@ conda create -y -n $ENV_NAME python=3.9
 conda activate $ENV_NAME
 
 # Install Python dependencies
-pip install -r play/requirements.txt
+# pip install -r play/requirements.txt
+pip install gymnasium==0.28.1 numpy==1.24.4 pygame==2.1.0 torch==1.12.1
 
 # Run the application
-python play/play.py
+cd play
+python play.py
